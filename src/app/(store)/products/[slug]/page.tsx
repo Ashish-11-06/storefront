@@ -1,9 +1,15 @@
 import { getProductBySlug } from "@/lib/getProductBySlug";
 import { notFound } from "next/navigation";
 
+type Props = {
+  params: Promise<{ slug: string }>;
+};
+
 // ✅ Dynamic SEO
-export async function generateMetadata({ params }: any) {
-  const product = getProductBySlug(params.slug);
+export async function generateMetadata({ params }: Props) {
+  const { slug } = await params; // ✅ FIX
+
+  const product = getProductBySlug(slug);
 
   if (!product) {
     return {
@@ -23,8 +29,10 @@ export async function generateMetadata({ params }: any) {
 }
 
 // ✅ Page
-export default function ProductDetailPage({ params }: any) {
-  const product = getProductBySlug(params.slug);
+export default async function ProductDetailPage({ params }: Props) {
+  const { slug } = await params; // ✅ FIX
+
+  const product = getProductBySlug(slug);
 
   if (!product) return notFound();
 
@@ -36,7 +44,9 @@ export default function ProductDetailPage({ params }: any) {
 
         {/* Details */}
         <div>
-          <h1 className="text-3xl font-bold mb-4">{product.name}</h1>
+          <h1 className="text-3xl font-bold mb-4">
+            {product.name}
+          </h1>
 
           <p className="text-xl text-gray-700 mb-4">
             ₹{product.price}
