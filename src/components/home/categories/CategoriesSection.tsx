@@ -1,24 +1,71 @@
+import { Smartphone, Laptop, Headphones, Watch } from "lucide-react";
+import Link from "next/link";
+
 const categories = [
-  "Mobiles",
-  "Laptops",
-  "Accessories",
-  "Headphones",
+  {
+    name: "Mobiles",
+    icon: Smartphone,
+    description: "Latest smartphones & accessories",
+    color: "from-blue-500 to-blue-600",
+    href: "/products?category=mobiles"
+  },
+  {
+    name: "Laptops",
+    icon: Laptop,
+    description: "Powerful laptops for work & gaming",
+    color: "from-green-500 to-green-600",
+    href: "/products?category=laptops"
+  },
+  {
+    name: "Accessories",
+    icon: Watch,
+    description: "Cases, chargers & more",
+    color: "from-purple-500 to-purple-600",
+    href: "/products?category=accessories"
+  },
+  {
+    name: "Headphones",
+    icon: Headphones,
+    description: "Premium audio experience",
+    color: "from-orange-500 to-orange-600",
+    href: "/products?category=headphones"
+  },
 ];
 
 export default function CategoriesSection() {
   return (
-    <section className="p-6">
-      <h2 className="text-2xl font-bold mb-4">Shop by Category</h2>
+    <section className="py-16 bg-gray-50">
+      <div className="container mx-auto px-4">
+        <div className="text-center mb-12">
+          <h2 className="text-3xl lg:text-4xl font-bold mb-4">Shop by Category</h2>
+          <p className="text-gray-600 text-lg max-w-2xl mx-auto">
+            Explore our wide range of premium electronics and find exactly what you're looking for
+          </p>
+        </div>
 
-      <div className="grid grid-cols-4 gap-4">
-        {categories.map((cat) => (
-          <div
-            key={cat}
-            className="border p-6 text-center rounded-lg hover:shadow-md cursor-pointer"
-          >
-            {cat}
-          </div>
-        ))}
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+          {categories.map((category) => {
+            const IconComponent = category.icon;
+            return (
+              <Link key={category.name} href={category.href}>
+                <div className="group bg-white rounded-xl p-6 shadow-sm hover:shadow-lg transition-all duration-300 hover:-translate-y-1 cursor-pointer border border-gray-100">
+                  <div className={`w-16 h-16 bg-gradient-to-br ${category.color} rounded-xl flex items-center justify-center mb-4 group-hover:scale-110 transition-transform duration-300`}>
+                    <IconComponent className="w-8 h-8 text-white" />
+                  </div>
+                  <h3 className="font-semibold text-lg mb-2 group-hover:text-primary transition-colors">
+                    {category.name}
+                  </h3>
+                  <p className="text-gray-600 text-sm leading-relaxed">
+                    {category.description}
+                  </p>
+                  <div className="mt-4 flex items-center text-primary font-medium text-sm group-hover:translate-x-2 transition-transform duration-300">
+                    Shop Now →
+                  </div>
+                </div>
+              </Link>
+            );
+          })}
+        </div>
       </div>
     </section>
   );

@@ -1,3 +1,4 @@
+import Header from "@/components/layout/Header";
 import HeroSection from "@/components/home/hero/HeroSection";
 import CategoriesSection from "@/components/home/categories/CategoriesSection";
 import FeaturedProducts from "@/components/home/products/FeaturedProducts";
@@ -12,13 +13,16 @@ export const metadata = {
 
 export default function HomePage() {
   return (
-    <main>
-      <HeroSection />
-      <CategoriesSection />
-      <FeaturedProducts />
-      <WhyChooseUs />
-      <SeoContent />
-      <Newsletter />
-    </main>
+    <>
+      <Header />
+      <main>
+        <HeroSection />
+        <CategoriesSection />
+        <FeaturedProducts />
+        <WhyChooseUs />
+        <SeoContent />
+        <Newsletter />
+      </main>
+    </>
   );
 }   
