@@ -38,7 +38,7 @@ export default function WhyChooseUs() {
         <div className="text-center mb-12">
           <h2 className="text-3xl lg:text-4xl font-bold mb-4">Why Choose TechStore?</h2>
           <p className="text-gray-600 text-lg max-w-2xl mx-auto">
-            We're committed to providing the best shopping experience with premium products and exceptional service
+            {"We're committed to providing the best shopping experience with premium products and exceptional service"}
           </p>
         </div>
 

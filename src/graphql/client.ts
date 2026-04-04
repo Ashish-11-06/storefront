@@ -1,6 +1,6 @@
 export async function graphqlFetch<T>(
   query: string,
-  variables?: Record<string, any>
+  variables?: Record<string, unknown>
 ): Promise<T> {
   const res = await fetch(process.env.NEXT_PUBLIC_GRAPHQL_URL!, {
     method: "POST",

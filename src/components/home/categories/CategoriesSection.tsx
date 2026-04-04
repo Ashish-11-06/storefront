@@ -39,7 +39,7 @@ export default function CategoriesSection() {
         <div className="text-center mb-12">
           <h2 className="text-3xl lg:text-4xl font-bold mb-4">Shop by Category</h2>
           <p className="text-gray-600 text-lg max-w-2xl mx-auto">
-            Explore our wide range of premium electronics and find exactly what you're looking for
+            {'Explore our wide range of premium electronics and find exactly what you\'re looking for '}
           </p>
         </div>
 
