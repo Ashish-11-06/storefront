@@ -17,10 +17,13 @@ export default function ProductCard({ product }: Props) {
             {/* Product Image Placeholder */}
             <div className="h-48 bg-gradient-to-br from-gray-100 to-gray-200 flex items-center justify-center group-hover:scale-105 transition-transform duration-300">
               <span className="text-4xl">
-                {product.name.includes('iPhone') && '📱'}
-                {product.name.includes('Samsung') && '📱'}
-                {product.name.includes('MacBook') && '💻'}
-                {product.name.includes('Headphones') && '🎧'}
+                {product.category === 'exotic' && '🌹'}
+                {product.category === 'pooja' && '🪷'}
+                {product.category === 'pooja-garlands' && '💛'}
+                {product.category === 'festive-torans' && '✨'}
+                {product.category === 'wedding' && '💒'}
+                {product.category === 'customized' && '🎨'}
+                {!product.category && '🌸'}
               </span>
             </div>
 

@@ -3,29 +3,29 @@ import { Truck, Shield, Award, HeadphonesIcon } from "lucide-react";
 const features = [
   {
     icon: Truck,
-    title: "Fast Delivery",
-    description: "Get your orders delivered within 24-48 hours across major cities",
-    color: "text-blue-600",
-    bgColor: "bg-blue-100"
+    title: "Same-Day Delivery",
+    description: "Fresh flowers delivered on the same day across major cities",
+    color: "text-rose-600",
+    bgColor: "bg-rose-100"
   },
   {
     icon: Shield,
-    title: "Secure Payments",
-    description: "100% secure checkout with multiple payment options and SSL encryption",
+    title: "Fresh Guarantee",
+    description: "100% fresh flowers with a freshness guarantee or your money back",
     color: "text-green-600",
     bgColor: "bg-green-100"
   },
   {
     icon: Award,
-    title: "Best Prices",
-    description: "Competitive pricing with regular discounts and special offers",
-    color: "text-purple-600",
-    bgColor: "bg-purple-100"
+    title: "Premium Quality",
+    description: "Handpicked flowers from the best growers with premium arrangements",
+    color: "text-pink-600",
+    bgColor: "bg-pink-100"
   },
   {
     icon: HeadphonesIcon,
-    title: "24/7 Support",
-    description: "Round-the-clock customer support to help you with any queries",
+    title: "Expert Florists",
+    description: "Professional florists available 24/7 for custom arrangements and queries",
     color: "text-orange-600",
     bgColor: "bg-orange-100"
   }
@@ -36,9 +36,9 @@ export default function WhyChooseUs() {
     <section className="py-16 bg-gradient-to-br from-gray-50 to-white">
       <div className="container mx-auto px-4">
         <div className="text-center mb-12">
-          <h2 className="text-3xl lg:text-4xl font-bold mb-4">Why Choose TechStore?</h2>
+          <h2 className="text-3xl lg:text-4xl font-bold mb-4">Why Choose Bloom & Blossom?</h2>
           <p className="text-gray-600 text-lg max-w-2xl mx-auto">
-            {"We're committed to providing the best shopping experience with premium products and exceptional service"}
+            {"We're committed to delivering the freshest flowers with premium quality and exceptional service"}
           </p>
         </div>
 

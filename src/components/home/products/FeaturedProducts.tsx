@@ -12,9 +12,9 @@ export default function FeaturedProducts() {
       <div className="container mx-auto px-4">
         <div className="flex items-center justify-between mb-12">
           <div>
-            <h2 className="text-3xl lg:text-4xl font-bold mb-4">Featured Products</h2>
+            <h2 className="text-3xl lg:text-4xl font-bold mb-4">Featured Flowers</h2>
             <p className="text-gray-600 text-lg">
-              Discover our most popular and highly-rated electronics
+              Check out our most popular fresh flowers and floral arrangements
             </p>
           </div>
           <Link href="/products">

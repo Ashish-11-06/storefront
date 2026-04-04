@@ -1,34 +1,48 @@
-import { Smartphone, Laptop, Headphones, Watch } from "lucide-react";
+import { Flower, Leaf, Gift, Heart, Sparkles, Palette } from "lucide-react";
 import Link from "next/link";
 
 const categories = [
   {
-    name: "Mobiles",
-    icon: Smartphone,
-    description: "Latest smartphones & accessories",
-    color: "from-blue-500 to-blue-600",
-    href: "/products?category=mobiles"
+    name: "Exotic Flowers",
+    icon: Flower,
+    description: "Rare & exotic flowers from around the world",
+    color: "from-rose-500 to-rose-600",
+    href: "/products?category=exotic"
   },
   {
-    name: "Laptops",
-    icon: Laptop,
-    description: "Powerful laptops for work & gaming",
-    color: "from-green-500 to-green-600",
-    href: "/products?category=laptops"
-  },
-  {
-    name: "Accessories",
-    icon: Watch,
-    description: "Cases, chargers & more",
-    color: "from-purple-500 to-purple-600",
-    href: "/products?category=accessories"
-  },
-  {
-    name: "Headphones",
-    icon: Headphones,
-    description: "Premium audio experience",
+    name: "Pooja Flowers",
+    icon: Leaf,
+    description: "Traditional flowers for spiritual ceremonies",
     color: "from-orange-500 to-orange-600",
-    href: "/products?category=headphones"
+    href: "/products?category=pooja"
+  },
+  {
+    name: "Festive Torans",
+    icon: Sparkles,
+    description: "Decorative floral torans for celebrations",
+    color: "from-yellow-500 to-yellow-600",
+    href: "/products?category=festive-torans"
+  },
+  {
+    name: "Pooja Garlands",
+    icon: Heart,
+    description: "Sacred garlands for prayers & rituals",
+    color: "from-pink-500 to-pink-600",
+    href: "/products?category=pooja-garlands"
+  },
+  {
+    name: "Wedding Specials",
+    icon: Gift,
+    description: "Bridal & ceremonial floral arrangements",
+    color: "from-red-500 to-red-600",
+    href: "/products?category=wedding"
+  },
+  {
+    name: "Customized Orders",
+    icon: Palette,
+    description: "Create your own floral masterpiece",
+    color: "from-purple-500 to-purple-600",
+    href: "/products?category=customized"
   },
 ];
 
@@ -39,11 +53,11 @@ export default function CategoriesSection() {
         <div className="text-center mb-12">
           <h2 className="text-3xl lg:text-4xl font-bold mb-4">Shop by Category</h2>
           <p className="text-gray-600 text-lg max-w-2xl mx-auto">
-            {'Explore our wide range of premium electronics and find exactly what you\'re looking for '}
+            Explore our collection of fresh flowers, festive arrangements, and customized creations for every special occasion
           </p>
         </div>
 
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-6 gap-6">
           {categories.map((category) => {
             const IconComponent = category.icon;
             return (

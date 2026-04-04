@@ -4,7 +4,7 @@ import { ArrowRight, Star } from "lucide-react";
 
 export default function HeroSection() {
   return (
-    <section className="relative bg-gradient-to-br from-slate-900 via-purple-900 to-slate-900 text-white overflow-hidden">
+    <section className="relative bg-gradient-to-br from-pink-600 via-rose-500 to-pink-700 text-white overflow-hidden">
       {/* Background Pattern */}
       <div className="absolute inset-0 opacity-10">
         <div className="absolute inset-0 bg-[radial-gradient(circle_at_1px_1px,rgba(255,255,255,0.3)_1px,transparent_0)] bg-[length:20px_20px]"></div>
@@ -24,15 +24,15 @@ export default function HeroSection() {
             </div>
 
             <h1 className="text-4xl lg:text-6xl font-bold mb-6 leading-tight">
-              Upgrade Your Tech
-              <span className="text-transparent bg-clip-text bg-gradient-to-r from-blue-400 to-purple-400">
-                {" "}Lifestyle
+              Celebrate Every Moment
+              <span className="text-transparent bg-clip-text bg-gradient-to-r from-amber-200 to-yellow-100">
+                {" "}with Flowers
               </span>
             </h1>
 
-            <p className="text-xl text-gray-300 mb-8 max-w-lg">
-              Discover premium gadgets, cutting-edge electronics, and unbeatable deals.
-              Shop the latest technology with confidence.
+            <p className="text-xl text-gray-100 mb-8 max-w-lg">
+              Discover exotic flowers, pooja flowers, festive torans, and custom floral arrangements for all occasions.
+              Fresh flowers delivered with love.
             </p>
 
             <div className="flex flex-col sm:flex-row gap-4 justify-center lg:justify-start">
@@ -48,41 +48,41 @@ export default function HeroSection() {
             </div>
 
             {/* Stats */}
-            <div className="grid grid-cols-3 gap-8 mt-12 pt-8 border-t border-gray-700">
+            <div className="grid grid-cols-3 gap-8 mt-12 pt-8 border-t border-white/20">
               <div className="text-center">
-                <div className="text-3xl font-bold text-blue-400">10K+</div>
-                <div className="text-gray-400">Products</div>
+                <div className="text-3xl font-bold text-amber-200">1000+</div>
+                <div className="text-gray-100">Flower Types</div>
               </div>
               <div className="text-center">
-                <div className="text-3xl font-bold text-purple-400">50K+</div>
-                <div className="text-gray-400">Happy Customers</div>
+                <div className="text-3xl font-bold text-yellow-100">25K+</div>
+                <div className="text-gray-100">Happy Customers</div>
               </div>
               <div className="text-center">
-                <div className="text-3xl font-bold text-green-400">4.9★</div>
-                <div className="text-gray-400">Rating</div>
+                <div className="text-3xl font-bold text-pink-200">4.8★</div>
+                <div className="text-gray-100">Rating</div>
               </div>
             </div>
           </div>
 
           {/* Hero Image Placeholder */}
           <div className="relative">
-            <div className="relative bg-gradient-to-br from-blue-500/20 to-purple-500/20 rounded-2xl p-8 backdrop-blur-sm border border-white/10">
-              <div className="aspect-square bg-gradient-to-br from-blue-400/30 to-purple-400/30 rounded-xl flex items-center justify-center">
+            <div className="relative bg-gradient-to-br from-rose-500/20 to-pink-500/20 rounded-2xl p-8 backdrop-blur-sm border border-white/10">
+              <div className="aspect-square bg-gradient-to-br from-rose-400/30 to-pink-400/30 rounded-xl flex items-center justify-center">
                 <div className="text-center">
                   <div className="w-32 h-32 bg-white/10 rounded-full flex items-center justify-center mb-4 mx-auto">
-                    <span className="text-4xl">📱</span>
+                    <span className="text-4xl">🌸</span>
                   </div>
-                  <p className="text-gray-300">Premium Electronics</p>
+                  <p className="text-gray-100">Fresh Floral Arrangements</p>
                 </div>
               </div>
             </div>
 
             {/* Floating Elements */}
-            <div className="absolute -top-4 -right-4 bg-yellow-400 text-black px-4 py-2 rounded-full font-semibold shadow-lg">
-              ⚡ Fast Delivery
+            <div className="absolute -top-4 -right-4 bg-amber-300 text-black px-4 py-2 rounded-full font-semibold shadow-lg">
+              🚚 Fresh Delivery
             </div>
             <div className="absolute -bottom-4 -left-4 bg-green-400 text-white px-4 py-2 rounded-full font-semibold shadow-lg">
-              💳 Secure Payment
+              💐 100% Fresh
             </div>
           </div>
         </div>
