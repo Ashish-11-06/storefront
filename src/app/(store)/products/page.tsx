@@ -5,6 +5,9 @@ export const revalidate = 60; // ISR
 
 export default async function ProductsPage() {
   const products = PRODUCTS;
+  console.log("Fetched products:", products);
+  console.log("Products count:", products.length);
+  console.log("First product:", products[0]);
 
   return (
     <div className="p-6">
