@@ -1,61 +1,58 @@
+"use client";
+
 import Link from "next/link";
-import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
-import { ShoppingCart, Search, User, Menu } from "lucide-react";
+import { ShoppingCart, Search, User } from "lucide-react";
 
 export default function Header() {
   return (
-    <header className="border-b bg-white/95 backdrop-blur supports-[backdrop-filter]:bg-white/60 sticky top-0 z-50">
-      <div className="container mx-auto px-4 py-4">
+    <header className="border-b bg-white sticky top-0 z-50">
+      <div className="max-w-7xl mx-auto px-6 py-3">
         <div className="flex items-center justify-between">
+
           {/* Logo */}
-          <Link href="/" className="text-2xl font-bold text-primary">
-            🌸 Bloom & Blossom
+          <Link
+            href="/"
+            className="text-3xl font-semibold font-serif tracking-wide bg-linear-to-r from-pink-500 via-rose-500 to-red-600 bg-clip-text text-transparent"
+          >
+            Bloom & Blossom
           </Link>
 
-          {/* Navigation */}
-          <nav className="hidden md:flex items-center space-x-8">
-            <Link href="/" className="text-gray-600 hover:text-primary transition-colors">
-              Home
+          {/* Center Navigation */}
+          <nav className="hidden md:flex items-center gap-8 text-sm font-medium">
+            <Link href="/" className="hover:text-black text-gray-700">
+              HOME
             </Link>
-            <Link href="/products" className="text-gray-600 hover:text-primary transition-colors">
-              Products
+            <Link href="/products" className="hover:text-black text-gray-700">
+              PRODUCS
             </Link>
-            <Link href="/categories" className="text-gray-600 hover:text-primary transition-colors">
-              Categories
+            <Link href="/about" className="hover:text-black text-gray-700">
+              ABOUT
             </Link>
-            <Link href="/about" className="text-gray-600 hover:text-primary transition-colors">
-              About
+            <Link href="/contact" className="hover:text-black text-gray-700">
+              CONTACT
             </Link>
           </nav>
 
-          {/* Search Bar */}
-          <div className="hidden md:flex items-center flex-1 max-w-md mx-8">
-            <div className="relative w-full">
-              <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 h-4 w-4" />
-              <Input
-                type="search"
-                placeholder="Search flowers..."
-                className="pl-10 pr-4"
-              />
+          {/* Right Icons */}
+          <div className="flex items-center gap-5">
+
+            {/* Search */}
+            <Search className="h-5 w-5 cursor-pointer text-gray-700" />
+
+            {/* User */}
+            <User className="h-5 w-5 cursor-pointer text-gray-700" />
+
+            {/* Cart */}
+            <div className="relative cursor-pointer">
+              <ShoppingCart className="h-5 w-5 text-gray-700" />
+
+              {/* Badge */}
+              <span className="absolute -top-2 -right-2 bg-black text-white text-[10px] rounded-full h-4 w-4 flex items-center justify-center">
+                0
+              </span>
             </div>
           </div>
 
-          {/* Actions */}
-          <div className="flex items-center space-x-4">
-            <Button variant="ghost" size="icon" className="hidden md:flex">
-              <User className="h-5 w-5" />
-            </Button>
-            <Button variant="ghost" size="icon" className="relative">
-              <ShoppingCart className="h-5 w-5" />
-              <span className="absolute -top-1 -right-1 bg-primary text-primary-foreground text-xs rounded-full h-5 w-5 flex items-center justify-center">
-                0
-              </span>
-            </Button>
-            <Button variant="ghost" size="icon" className="md:hidden">
-              <Menu className="h-5 w-5" />
-            </Button>
-          </div>
         </div>
       </div>
     </header>

@@ -14,15 +14,12 @@ export const metadata = {
 export default function HomePage() {
   return (
     <>
-      <Header />
-      <main>
-        <HeroSection />
-        <CategoriesSection />
-        <FeaturedProducts />
-        <WhyChooseUs />
-        <SeoContent />
-        <Newsletter />
-      </main>
+      <HeroSection />
+      <CategoriesSection />
+      <FeaturedProducts />
+      <WhyChooseUs />
+      <SeoContent />
+      <Newsletter />
     </>
   );
 }   

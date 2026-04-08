@@ -1,72 +1,83 @@
+"use client";
+
 import Link from "next/link";
 import { Product } from "@/types/product";
-import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { Heart, Star } from "lucide-react";
-
+import { Heart, Star, ShoppingCart } from "lucide-react";
 interface Props {
   product: Product;
 }
 
 export default function ProductCard({ product }: Props) {
   return (
-    <Card className="group hover:shadow-xl transition-all duration-300 hover:-translate-y-1 border-0 shadow-md overflow-hidden">
-      <CardContent className="p-0">
-        <Link href={`/products/${product.slug}`}>
-          <div className="relative overflow-hidden">
-            {/* Product Image Placeholder */}
-            <div className="h-48 bg-gradient-to-br from-gray-100 to-gray-200 flex items-center justify-center group-hover:scale-105 transition-transform duration-300">
-              <span className="text-4xl">
-                {product.category === 'exotic' && '🌹'}
-                {product.category === 'pooja' && '🪷'}
-                {product.category === 'pooja-garlands' && '💛'}
-                {product.category === 'festive-torans' && '✨'}
-                {product.category === 'wedding' && '💒'}
-                {product.category === 'customized' && '🎨'}
-                {!product.category && '🌸'}
-              </span>
-            </div>
+    <div className="group relative rounded-lg bg-white/70 backdrop-blur-md border border-white/40 shadow-sm hover:shadow-xl transition-all duration-500 overflow-hidden">
 
-            {/* Wishlist Button */}
-            <button className="absolute top-3 right-3 p-2 bg-white/80 backdrop-blur-sm rounded-full opacity-0 group-hover:opacity-100 transition-opacity duration-300 hover:bg-white">
-              <Heart className="w-4 h-4 text-gray-600 hover:text-red-500 transition-colors" />
-            </button>
+      {/* 🌸 Soft Gradient Glow */}
+      {/* <div className="absolute inset-0 opacity-0 group-hover:opacity-100 transition duration-500 bg-linear-to-br from-pink-300/10 to-rose-300/20"></div> */}
 
-            {/* Rating Badge */}
-            <div className="absolute top-3 left-3 bg-white/90 backdrop-blur-sm rounded-full px-2 py-1 flex items-center gap-1">
-              <Star className="w-3 h-3 fill-yellow-400 text-yellow-400" />
-              <span className="text-xs font-medium">4.5</span>
-            </div>
-          </div>
+      <Link href={`/products/${product.slug}`}>
 
-          <div className="p-4">
-            <h2 className="font-semibold text-lg mb-2 line-clamp-2 group-hover:text-primary transition-colors">
-              {product.name}
-            </h2>
+        {/* IMAGE */}
+        <div className="relative overflow-hidden rounded-lg">
 
-            <div className="flex items-center gap-2 mb-3">
-              <span className="text-2xl font-bold text-primary">₹{product.price.toLocaleString()}</span>
-              <span className="text-sm text-gray-500 line-through">₹{(product.price * 1.2).toLocaleString()}</span>
-              <span className="text-sm text-green-600 font-medium">17% off</span>
-            </div>
+          <img
+            src={product.image}
+            alt={product.name}
+            className="w-full h-56 object-cover transition-transform duration-500 group-hover:scale-110 rounded-b-lg"
+          />
 
-            <div className="flex items-center gap-1 mb-3">
-              <div className="flex text-yellow-400">
-                {[...Array(5)].map((_, i) => (
-                  <Star key={i} className="w-3 h-3 fill-current" />
-                ))}
-              </div>
-              <span className="text-xs text-gray-600">(124 reviews)</span>
-            </div>
-          </div>
-        </Link>
+          {/* Wishlist */}
+          <button className="absolute top-3 right-3 p-2 bg-white/70 backdrop-blur-md rounded-full shadow-sm opacity-0 group-hover:opacity-100 transition hover:bg-white">
+            <Heart className="w-4 h-4 text-gray-600 hover:text-rose-500 transition" />
+          </button>
 
-        <div className="px-4 pb-4">
-          <Button className="w-full group-hover:bg-primary group-hover:text-primary-foreground transition-colors">
-            Add to Cart
-          </Button>
+          {/* Rating */}
+          {/* <div className="absolute top-3 left-3 bg-white/80 backdrop-blur-md rounded-full px-2 py-1 flex items-center gap-1 shadow-sm">
+            <Star className="w-3 h-3 fill-yellow-400 text-yellow-400" />
+            <span className="text-xs font-medium text-gray-700">4.5</span>
+          </div> */}
         </div>
-      </CardContent>
-    </Card>
+
+        {/* CONTENT */}
+        <div className="p-5 space-y-2 relative z-10">
+
+          {/* Title */}
+          <h2 className="font-medium text-gray-800 text-lg leading-snug truncate group-hover:text-black transition">
+            {product.name}
+          </h2>
+
+          {/* Unit (FIXED POSITION ✅) */}
+          {product.unit && (
+            <span className="inline-block text-xs bg-gray-100 text-gray-600 px-2 py-1 rounded-full">
+              {product.unit}
+            </span>
+          )}
+
+          {/* Price */}
+          <div className="flex items-center gap-2 mt-1">
+            <span className="text-lg font-semibold text-gray-900">
+              ₹{product.price.toLocaleString()}
+            </span>
+            <span className="text-sm text-gray-400 line-through">
+              ₹{(product.price * 1.2).toLocaleString()}
+            </span>
+            <span className="text-xs text-green-600 font-medium">
+              17% off
+            </span>
+          </div>
+        </div>
+      </Link>
+
+      {/* CTA */}
+      <div className="px-5 pb-5">
+        <Button
+          variant="premium"
+          className="w-full rounded-full gap-2 font-medium tracking-wide"
+        >
+          <ShoppingCart className="w-4 h-4" />
+          Add to Cart
+        </Button>
+      </div>
+    </div>
   );
 }

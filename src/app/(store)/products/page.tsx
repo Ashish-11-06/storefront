@@ -23,173 +23,144 @@ export default async function ProductsPage() {
   const products = PRODUCTS;
 
   return (
-    <div className="min-h-screen bg-gray-50/50">
-      {/* Breadcrumb */}
-      <div className="bg-white border-b">
-        <div className="container mx-auto px-4 py-3">
-          <nav className="flex items-center space-x-2 text-sm text-gray-600">
-            <Link href="/" className="hover:text-primary transition-colors">Home</Link>
-            <span>/</span>
-            <span className="text-gray-900 font-medium">Products</span>
-          </nav>
-        </div>
+    <div className="min-h-screen bg-[#f8f8f8]">
+
+      {/* HEADER */}
+      <div className="max-w-8xl mx-auto px-6 py-12 text-center">
+        <p className="text-xs tracking-[0.3em] uppercase text-gray-500 mb-3">
+          Our Collection
+        </p>
+
+        <h1 className="text-3xl lg:text-4xl font-serif text-gray-800">
+          All Flower Collections
+        </h1>
       </div>
 
-      {/* Header Section */}
-      <div className="bg-white border-b">
-        <div className="container mx-auto px-4 py-8">
-          <div className="text-center">
-            <h1 className="text-4xl font-bold text-gray-900 mb-4">Our Flower Collection</h1>
-            <p className="text-lg text-gray-600 max-w-2xl mx-auto">
-              Discover our premium collection of exotic flowers, pooja essentials, and festive decorations.
-              Fresh, beautiful, and perfect for every occasion.
-            </p>
-          </div>
-        </div>
-      </div>
+      <div className="max-w-7xl mx-auto px-6 pb-16 flex gap-10">
 
-      {/* Filters and Search */}
-      <div className="bg-white border-b sticky top-0 z-40">
-        <div className="container mx-auto px-4 py-4">
-          <div className="flex flex-col lg:flex-row gap-4 items-center justify-between">
-            {/* Search */}
-            <div className="relative flex-1 max-w-md">
-              <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 h-4 w-4" />
-              <Input
-                type="search"
-                placeholder="Search products..."
-                className="pl-10"
-              />
-            </div>
+        {/* 🌸 SIDEBAR */}
+        <aside className="hidden lg:block w-64 flex-shrink-0">
+          <div className="sticky top-28 space-y-8">
 
-            {/* Filters */}
-            <div className="flex items-center gap-4">
-              {/* Sort */}
-              <Select defaultValue="featured">
-                <SelectTrigger className="w-40">
-                  <SelectValue placeholder="Sort by" />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="featured">Featured</SelectItem>
-                  <SelectItem value="price-low">Price: Low to High</SelectItem>
-                  <SelectItem value="price-high">Price: High to Low</SelectItem>
-                  <SelectItem value="newest">Newest</SelectItem>
-                  <SelectItem value="rating">Highest Rated</SelectItem>
-                </SelectContent>
-              </Select>
+            {/* TITLE */}
+            <div className="flex items-center gap-3 mb-4">
+              <div className="w-10 h-[1px] bg-gray-300"></div>
 
-              {/* View Toggle */}
-              <div className="flex border rounded-lg">
-                <Button variant="ghost" size="sm" className="rounded-r-none">
-                  <Grid className="h-4 w-4" />
-                </Button>
-                <Button variant="ghost" size="sm" className="rounded-l-none border-l">
-                  <List className="h-4 w-4" />
-                </Button>
-              </div>
-
-              {/* Filter Button */}
-              <Button variant="outline" size="sm">
-                <SlidersHorizontal className="h-4 w-4 mr-2" />
+              <h3 className="text-sm tracking-[0.35em] text-gray-600 uppercase font-medium">
                 Filters
-              </Button>
+              </h3>
             </div>
-          </div>
-        </div>
-      </div>
 
-      <div className="container mx-auto px-4 py-8">
-        <div className="flex gap-8">
-          {/* Sidebar - Categories */}
-          <aside className="hidden lg:block w-64 flex-shrink-0">
-            <div className="bg-white rounded-lg border p-6 sticky top-32">
-              <h3 className="font-semibold text-lg mb-4">Categories</h3>
-              <div className="space-y-2">
+            {/* CATEGORIES BOX */}
+            <div className="border border-gray-200 rounded-xl p-5 bg-white/60 backdrop-blur-sm">
+              <h4 className="text-sm font-medium text-gray-800 mb-4">
+                Categories
+              </h4>
+
+              <div className="space-y-3">
                 {categories.map((category) => (
                   <Link
                     key={category.id}
-                    href={category.id === 'all' ? '/products' : `/products?category=${category.id}`}
-                    className="flex items-center justify-between p-3 rounded-lg hover:bg-gray-50 transition-colors group"
+                    href={
+                      category.id === "all"
+                        ? "/products"
+                        : `/products?category=${category.id}`
+                    }
+                    className="flex items-center justify-between text-sm text-gray-600 hover:text-black transition group"
                   >
-                    <span className="text-gray-700 group-hover:text-primary transition-colors">
+                    <span className="group-hover:translate-x-1 transition">
                       {category.name}
                     </span>
-                    <Badge variant="secondary" className="text-xs">
+
+                    <span className="text-xs text-gray-400">
                       {category.count}
-                    </Badge>
+                    </span>
                   </Link>
                 ))}
               </div>
-
-              {/* Price Range */}
-              <div className="mt-8">
-                <h4 className="font-semibold mb-4">Price Range</h4>
-                <div className="space-y-2">
-                  <label className="flex items-center">
-                    <input type="checkbox" className="rounded border-gray-300" />
-                    <span className="ml-2 text-sm">Under ₹500</span>
-                  </label>
-                  <label className="flex items-center">
-                    <input type="checkbox" className="rounded border-gray-300" />
-                    <span className="ml-2 text-sm">₹500 - ₹1000</span>
-                  </label>
-                  <label className="flex items-center">
-                    <input type="checkbox" className="rounded border-gray-300" />
-                    <span className="ml-2 text-sm">₹1000 - ₹2000</span>
-                  </label>
-                  <label className="flex items-center">
-                    <input type="checkbox" className="rounded border-gray-300" />
-                    <span className="ml-2 text-sm">₹2000 - ₹5000</span>
-                  </label>
-                  <label className="flex items-center">
-                    <input type="checkbox" className="rounded border-gray-300" />
-                    <span className="ml-2 text-sm">Above ₹5000</span>
-                  </label>
-                </div>
-              </div>
             </div>
-          </aside>
 
-          {/* Main Content */}
-          <main className="flex-1">
-            {/* Results Header */}
-            <div className="flex items-center justify-between mb-6">
-              <p className="text-gray-600">
-                Showing <span className="font-medium text-gray-900">{products.length}</span> products
-              </p>
+            {/* PRICE BOX */}
+            <div className="border border-gray-200 rounded-xl p-5 bg-white/60 backdrop-blur-sm">
+              <h4 className="text-sm font-medium text-gray-800 mb-4">
+                Price
+              </h4>
 
-              {/* Mobile Category Filter */}
-              <div className="lg:hidden">
-                <Select>
-                  <SelectTrigger className="w-40">
-                    <SelectValue placeholder="Category" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    {categories.map((category) => (
-                      <SelectItem key={category.id} value={category.id}>
-                        {category.name} ({category.count})
-                      </SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
+              <div className="space-y-3">
+                {[
+                  "Under ₹500",
+                  "₹500 - ₹1000",
+                  "₹1000 - ₹2000",
+                  "₹2000+"
+                ].map((price, i) => (
+                  <label
+                    key={i}
+                    className="flex items-center gap-3 text-sm text-gray-600 cursor-pointer group"
+                  >
+                    <input
+                      type="checkbox"
+                      className="accent-rose-400 cursor-pointer"
+                    />
+
+                    <span className="group-hover:text-black transition">
+                      {price}
+                    </span>
+                  </label>
+                ))}
               </div>
             </div>
 
-            {/* Products Grid */}
-            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
-              {products.map((product) => (
-                <ProductCard key={product.id} product={product} />
-              ))}
-            </div>
+            {/* CLEAR FILTER */}
+            <button className="text-xs text-gray-400 hover:text-rose-500 transition">
+              Clear Filters
+            </button>
 
-            {/* Load More / Pagination */}
-            <div className="text-center mt-12">
-              <Button variant="outline" size="lg">
-                Load More Products
-              </Button>
-            </div>
-          </main>
-        </div>
+          </div>
+        </aside>
+
+        {/* 🌼 MAIN */}
+        <main className="flex-1">
+
+          {/* TOP BAR */}
+          <div className="flex items-center justify-between mb-8">
+
+            <p className="text-sm text-gray-500">
+              Showing{" "}
+              <span className="text-gray-900 font-medium">
+                {products.length}
+              </span>{" "}
+              products
+            </p>
+
+            <Select defaultValue="featured">
+              <SelectTrigger className="w-44 rounded-full border-gray-200">
+                <SelectValue />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="featured">Featured</SelectItem>
+                <SelectItem value="price-low">Low to High</SelectItem>
+                <SelectItem value="price-high">High to Low</SelectItem>
+              </SelectContent>
+            </Select>
+          </div>
+
+          {/* GRID */}
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-3 gap-8">
+            {products.map((product) => (
+              <ProductCard key={product.id} product={product} />
+            ))}
+          </div>
+
+          {/* LOAD MORE */}
+          <div className="text-center mt-14">
+            <Button
+              variant="premium"
+              className="rounded-full px-6 py-3"
+            >
+              Load More
+            </Button>
+          </div>
+        </main>
       </div>
     </div>
   );
