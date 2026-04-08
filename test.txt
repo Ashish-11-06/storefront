@@ -1,0 +1,1 @@
+["(store)","api","favicon.ico","globals.css","layout.tsx"]

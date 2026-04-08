@@ -5,59 +5,46 @@ import { ShoppingCart, Search, User, Menu } from "lucide-react";
 
 export default function Header() {
   return (
-    <header className="border-b bg-white/95 backdrop-blur supports-[backdrop-filter]:bg-white/60 sticky top-0 z-50">
-      <div className="container mx-auto px-4 py-4">
-        <div className="flex items-center justify-between">
-          {/* Logo */}
-          <Link href="/" className="text-2xl font-bold text-primary">
-            🌸 Bloom & Blossom
-          </Link>
+    <>
+      {/* Top Banner */}
+      <div className="bg-[#1C1917] text-[#FAFAF9] text-center py-2.5 text-xs sm:text-sm font-semibold tracking-widest uppercase">
+        Delivering fresh blooms daily across Pune
+      </div>
 
-          {/* Navigation */}
-          <nav className="hidden md:flex items-center space-x-8">
-            <Link href="/" className="text-gray-600 hover:text-primary transition-colors">
-              Home
+      {/* Floating Navbar */}
+      <div className="sticky top-6 z-50 px-4 md:px-8 flex justify-center w-full mt-4">
+        <nav className="w-full max-w-6xl bg-white/80 backdrop-blur-xl rounded-full shadow-[0_8px_30px_rgb(0,0,0,0.06)] border border-white/50 flex items-center justify-between px-4 py-3 transition-all duration-300">
+          <div className="flex items-center gap-4">
+            {/* Logo */}
+            <Link href="/" className="relative group cursor-pointer pl-1">
+              <div className="absolute inset-0 bg-gradient-to-r from-[#FF9933] to-[#F59E0B] rounded-full blur-md opacity-50 group-hover:opacity-100 transition duration-500"></div>
+              <div className="relative w-11 h-11 rounded-full bg-gradient-to-tr from-[#FF9933] to-[#F59E0B] flex items-center justify-center font-black text-white text-lg shadow-sm border border-white/20">
+                RF
+              </div>
             </Link>
-            <Link href="/products" className="text-gray-600 hover:text-primary transition-colors">
-              Products
-            </Link>
-            <Link href="/categories" className="text-gray-600 hover:text-primary transition-colors">
-              Categories
-            </Link>
-            <Link href="/about" className="text-gray-600 hover:text-primary transition-colors">
-              About
-            </Link>
-          </nav>
-
-          {/* Search Bar */}
-          <div className="hidden md:flex items-center flex-1 max-w-md mx-8">
-            <div className="relative w-full">
-              <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 h-4 w-4" />
-              <Input
-                type="search"
-                placeholder="Search flowers..."
-                className="pl-10 pr-4"
-              />
+            {/* Nav Links */}
+            <div className="hidden lg:flex gap-8 ml-6 font-medium text-gray-600 text-sm tracking-wide">
+              <Link href="#" className="hover:text-[#F59E0B] transition-colors">Puja Flowers Subscription</Link>
+              <Link href="#" className="hover:text-[#F59E0B] transition-colors">Exotic Flowers</Link>
+              <Link href="#" className="hover:text-[#F59E0B] transition-colors">Events & Weddings</Link>
+              <Link href="#" className="hover:text-[#F59E0B] transition-colors">Store</Link>
             </div>
           </div>
 
           {/* Actions */}
-          <div className="flex items-center space-x-4">
-            <Button variant="ghost" size="icon" className="hidden md:flex">
-              <User className="h-5 w-5" />
-            </Button>
-            <Button variant="ghost" size="icon" className="relative">
-              <ShoppingCart className="h-5 w-5" />
-              <span className="absolute -top-1 -right-1 bg-primary text-primary-foreground text-xs rounded-full h-5 w-5 flex items-center justify-center">
-                0
-              </span>
-            </Button>
-            <Button variant="ghost" size="icon" className="md:hidden">
-              <Menu className="h-5 w-5" />
-            </Button>
+          <div className="flex items-center gap-4 pr-1">
+            <div className="hidden md:flex bg-gray-50/80 rounded-full px-4 py-2 items-center border border-gray-200/60 focus-within:ring-2 focus-within:ring-[#F59E0B]/40 focus-within:bg-white transition-all">
+              <Search className="w-4 h-4 text-gray-400 mr-2" />
+              <input type="text" placeholder="Search flowers..." className="bg-transparent outline-none text-sm w-32 placeholder:text-gray-400" />
+            </div>
+            <Link href="/login" className="hidden sm:block text-sm font-semibold text-gray-700 hover:text-[#F59E0B] transition-colors">Log In</Link>
+            <div className="relative cursor-pointer bg-[#FFFBF0] p-2.5 rounded-full text-[#F59E0B] hover:bg-[#F59E0B] hover:text-white transition-all duration-300 shadow-sm border border-[#F59E0B]/20 overflow-hidden group">
+              <ShoppingCart className="w-5 h-5 relative z-10 inline-block" />
+              <span className="absolute top-0 right-0 bg-[#BE123C] text-white text-[9px] w-4 h-4 flex items-center justify-center rounded-full font-bold z-20 border border-white">0</span>
+            </div>
           </div>
-        </div>
+        </nav>
       </div>
-    </header>
+    </>
   );
 }

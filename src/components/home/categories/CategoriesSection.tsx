@@ -1,85 +1,31 @@
-import { Flower, Leaf, Gift, Heart, Sparkles, Palette } from "lucide-react";
-import Link from "next/link";
-
-const categories = [
-  {
-    name: "Exotic Flowers",
-    icon: Flower,
-    description: "Rare & exotic flowers from around the world",
-    color: "from-rose-500 to-rose-600",
-    href: "/products?category=exotic"
-  },
-  {
-    name: "Pooja Flowers",
-    icon: Leaf,
-    description: "Traditional flowers for spiritual ceremonies",
-    color: "from-orange-500 to-orange-600",
-    href: "/products?category=pooja"
-  },
-  {
-    name: "Festive Torans",
-    icon: Sparkles,
-    description: "Decorative floral torans for celebrations",
-    color: "from-yellow-500 to-yellow-600",
-    href: "/products?category=festive-torans"
-  },
-  {
-    name: "Pooja Garlands",
-    icon: Heart,
-    description: "Sacred garlands for prayers & rituals",
-    color: "from-pink-500 to-pink-600",
-    href: "/products?category=pooja-garlands"
-  },
-  {
-    name: "Wedding Specials",
-    icon: Gift,
-    description: "Bridal & ceremonial floral arrangements",
-    color: "from-red-500 to-red-600",
-    href: "/products?category=wedding"
-  },
-  {
-    name: "Customized Orders",
-    icon: Palette,
-    description: "Create your own floral masterpiece",
-    color: "from-purple-500 to-purple-600",
-    href: "/products?category=customized"
-  },
-];
-
 export default function CategoriesSection() {
-  return (
-    <section className="py-16 bg-gray-50">
-      <div className="container mx-auto px-4">
-        <div className="text-center mb-12">
-          <h2 className="text-3xl lg:text-4xl font-bold mb-4">Shop by Category</h2>
-          <p className="text-gray-600 text-lg max-w-2xl mx-auto">
-            Explore our collection of fresh flowers, festive arrangements, and customized creations for every special occasion
-          </p>
-        </div>
+  const categories = [
+    { name: "Puja Offerings", img: "https://images.unsplash.com/photo-1582794543139-8ac9cb0f7b11?auto=format&fit=crop&q=80&w=400" },
+    { name: "Exotic Bouquets", img: "https://images.unsplash.com/photo-1563241527-3004b7be0ffd?auto=format&fit=crop&q=80&w=400" },
+    { name: "Wedding Decor", img: "https://images.unsplash.com/photo-1490750967868-88cb44cb2754?auto=format&fit=crop&q=80&w=400" },
+    { name: "Everyday Posy", img: "https://images.unsplash.com/photo-1518709268805-4e9042af9f23?auto=format&fit=crop&q=80&w=400" },
+  ];
 
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-6 gap-6">
-          {categories.map((category) => {
-            const IconComponent = category.icon;
-            return (
-              <Link key={category.name} href={category.href}>
-                <div className="group bg-white rounded-xl p-6 shadow-sm hover:shadow-lg transition-all duration-300 hover:-translate-y-1 cursor-pointer border border-gray-100">
-                  <div className={`w-16 h-16 bg-gradient-to-br ${category.color} rounded-xl flex items-center justify-center mb-4 group-hover:scale-110 transition-transform duration-300`}>
-                    <IconComponent className="w-8 h-8 text-white" />
-                  </div>
-                  <h3 className="font-semibold text-lg mb-2 group-hover:text-primary transition-colors">
-                    {category.name}
-                  </h3>
-                  <p className="text-gray-600 text-sm leading-relaxed">
-                    {category.description}
-                  </p>
-                  <div className="mt-4 flex items-center text-primary font-medium text-sm group-hover:translate-x-2 transition-transform duration-300">
-                    Shop Now →
-                  </div>
-                </div>
-              </Link>
-            );
-          })}
-        </div>
+  return (
+    <section className="mt-28 px-4 sm:px-6 lg:px-8">
+      <div className="text-center mb-12">
+        <h2 className="text-4xl md:text-5xl font-black text-gray-900 tracking-tight">Shop by <span className="text-[#F59E0B]">Category</span></h2>
+        <p className="mt-4 text-lg text-gray-500 max-w-2xl mx-auto">Explore our wide array of floral arrangements designed for every occasion.</p>
+      </div>
+
+      <div className="grid grid-cols-2 md:grid-cols-4 gap-6">
+        {categories.map((cat, i) => (
+          <div key={i} className="group cursor-pointer flex flex-col items-center">
+            <div className="w-full aspect-square rounded-[2rem] overflow-hidden mb-4 shadow-lg group-hover:shadow-[0_20px_40px_rgba(245,158,11,0.2)] transition-all duration-300 pb-[100%] relative">
+              <img
+                src={cat.img}
+                alt={cat.name}
+                className="absolute inset-0 w-full h-full object-cover transform group-hover:scale-110 transition-transform duration-700"
+              />
+            </div>
+            <h3 className="text-xl font-bold text-gray-800 group-hover:text-[#F59E0B] transition-colors">{cat.name}</h3>
+          </div>
+        ))}
       </div>
     </section>
   );

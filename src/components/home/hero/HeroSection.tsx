@@ -1,89 +1,30 @@
-import { Button } from "@/components/ui/button";
-import Link from "next/link";
-import { ArrowRight, Star } from "lucide-react";
-
 export default function HeroSection() {
   return (
-    <section className="relative bg-gradient-to-br from-pink-600 via-rose-500 to-pink-700 text-white overflow-hidden">
-      {/* Background Pattern */}
-      <div className="absolute inset-0 opacity-10">
-        <div className="absolute inset-0 bg-[radial-gradient(circle_at_1px_1px,rgba(255,255,255,0.3)_1px,transparent_0)] bg-[length:20px_20px]"></div>
-      </div>
+    <section className="relative px-4 sm:px-6 lg:px-8 w-full mt-6 group">
+      <div className="relative w-full h-[85vh] min-h-[600px] rounded-[2.5rem] md:rounded-[3.5rem] overflow-hidden shadow-[0_20px_50px_rgb(0,0,0,0.15)] flex items-center bg-gray-900 group">
+        <div
+          className="absolute inset-0 bg-cover bg-center bg-no-repeat transition-transform duration-[10000ms] ease-out group-hover:scale-110"
+          style={{ backgroundImage: "url('https://images.unsplash.com/photo-1582794543139-8ac9cb0f7b11?auto=format&fit=crop&q=80&w=2000')" }}
+        ></div>
+        <div className="absolute inset-0 bg-gradient-to-r from-black/80 via-black/40 to-transparent"></div>
 
-      <div className="relative container mx-auto px-4 py-24 lg:py-32">
-        <div className="grid lg:grid-cols-2 gap-12 items-center">
-          {/* Content */}
-          <div className="text-center lg:text-left">
-            <div className="flex items-center justify-center lg:justify-start gap-2 mb-6">
-              <div className="flex text-yellow-400">
-                {[...Array(5)].map((_, i) => (
-                  <Star key={i} className="w-5 h-5 fill-current" />
-                ))}
-              </div>
-              <span className="text-gray-300">Trusted by 10,000+ customers</span>
-            </div>
-
-            <h1 className="text-4xl lg:text-6xl font-bold mb-6 leading-tight">
-              Celebrate Every Moment
-              <span className="text-transparent bg-clip-text bg-gradient-to-r from-amber-200 to-yellow-100">
-                {" "}with Flowers
-              </span>
-            </h1>
-
-            <p className="text-xl text-gray-100 mb-8 max-w-lg">
-              Discover exotic flowers, pooja flowers, festive torans, and custom floral arrangements for all occasions.
-              Fresh flowers delivered with love.
-            </p>
-
-            <div className="flex flex-col sm:flex-row gap-4 justify-center lg:justify-start">
-              <Link href="/products">
-                <Button size="lg" className="bg-white text-black hover:bg-gray-100 text-lg px-8 py-3">
-                  Shop Now
-                  <ArrowRight className="ml-2 w-5 h-5" />
-                </Button>
-              </Link>
-              <Button size="lg" variant="outline" className="border-white text-white hover:bg-white hover:text-black text-lg px-8 py-3">
-                View Categories
-              </Button>
-            </div>
-
-            {/* Stats */}
-            <div className="grid grid-cols-3 gap-8 mt-12 pt-8 border-t border-white/20">
-              <div className="text-center">
-                <div className="text-3xl font-bold text-amber-200">1000+</div>
-                <div className="text-gray-100">Flower Types</div>
-              </div>
-              <div className="text-center">
-                <div className="text-3xl font-bold text-yellow-100">25K+</div>
-                <div className="text-gray-100">Happy Customers</div>
-              </div>
-              <div className="text-center">
-                <div className="text-3xl font-bold text-pink-200">4.8★</div>
-                <div className="text-gray-100">Rating</div>
-              </div>
-            </div>
+        <div className="relative z-10 px-8 md:px-16 w-full max-w-3xl">
+          <div className="inline-block px-4 py-1.5 rounded-full bg-white/10 backdrop-blur-md border border-white/20 text-[#F59E0B] text-sm font-semibold tracking-widest uppercase mb-6 shadow-xl">
+            Est. 2022 • Premium Floral Delivery
           </div>
-
-          {/* Hero Image Placeholder */}
-          <div className="relative">
-            <div className="relative bg-gradient-to-br from-rose-500/20 to-pink-500/20 rounded-2xl p-8 backdrop-blur-sm border border-white/10">
-              <div className="aspect-square bg-gradient-to-br from-rose-400/30 to-pink-400/30 rounded-xl flex items-center justify-center">
-                <div className="text-center">
-                  <div className="w-32 h-32 bg-white/10 rounded-full flex items-center justify-center mb-4 mx-auto">
-                    <span className="text-4xl">🌸</span>
-                  </div>
-                  <p className="text-gray-100">Fresh Floral Arrangements</p>
-                </div>
-              </div>
-            </div>
-
-            {/* Floating Elements */}
-            <div className="absolute -top-4 -right-4 bg-amber-300 text-black px-4 py-2 rounded-full font-semibold shadow-lg">
-              🚚 Fresh Delivery
-            </div>
-            <div className="absolute -bottom-4 -left-4 bg-green-400 text-white px-4 py-2 rounded-full font-semibold shadow-lg">
-              💐 100% Fresh
-            </div>
+          <h1 className="text-6xl md:text-8xl font-black text-white tracking-tighter mb-6 leading-[1.05] drop-shadow-2xl">
+            Rajesh <span className="text-[#FF9933] inline-block transform hover:rotate-2 transition-transform duration-300">Flowers</span>
+          </h1>
+          <p className="text-xl md:text-2xl text-gray-200 font-light mb-10 max-w-xl leading-relaxed drop-shadow-md">
+            Experience the vibrant spirit of traditional Indian florals. Handpicked, pristine, and delivered fresh to your doorstep.
+          </p>
+          <div className="flex flex-col sm:flex-row gap-4">
+            <button className="bg-gradient-to-r from-[#FF9933] to-[#F59E0B] text-white hover:shadow-[0_0_40px_rgba(245,158,11,0.4)] transition-all duration-300 transform hover:-translate-y-1 active:scale-95 font-bold py-4 px-10 rounded-full text-lg tracking-wide border-0">
+              Start Free Trial
+            </button>
+            <button className="bg-white/10 backdrop-blur-md text-white border border-white/30 hover:bg-white/20 transition-all duration-300 font-bold py-4 px-10 rounded-full text-lg tracking-wide">
+              Explore Collections
+            </button>
           </div>
         </div>
       </div>

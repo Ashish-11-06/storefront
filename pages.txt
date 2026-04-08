@@ -1,0 +1,3 @@
+src\app\(store)\page.tsx
+src\app\(store)\products\page.tsx
+src\app\(store)\products\[slug]\page.tsx
