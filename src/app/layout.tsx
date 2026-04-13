@@ -1,5 +1,5 @@
 import type { Metadata } from "next";
-import { Geist, Geist_Mono } from "next/font/google";
+import { Geist, Geist_Mono, Inter } from "next/font/google";
 import "./globals.css";
 import ThemeProvider from "@/components/theme/ThemeProvider";
 
@@ -13,9 +13,16 @@ const geistMono = Geist_Mono({
   subsets: ["latin"],
 });
 
+const inter = Inter({
+  subsets: ["latin"],
+  variable: "--font-inter",
+  display: "swap",
+});
+
 export const metadata: Metadata = {
   title: "Bloom & Blossom - Exotic Flowers & Pooja Flowers",
-  description: "Premium flowers for all occasions - Exotic flowers, Pooja flowers, Festive torans, Wedding specials & Customized orders",
+  description:
+    "Premium flowers for all occasions - Exotic flowers, Pooja flowers, Festive torans, Wedding specials & Customized orders",
 };
 
 export default function RootLayout({
@@ -26,13 +33,17 @@ export default function RootLayout({
   return (
     <html
       lang="en"
-      className={`${geistSans.variable} ${geistMono.variable} h-full antialiased`}
+      className={`
+        ${geistSans.variable} 
+        ${geistMono.variable} 
+        ${inter.variable} 
+        h-full antialiased
+      `}
       suppressHydrationWarning={true}
     >
+      {/* ✅ Let CSS control fonts */}
       <body className="min-h-full flex flex-col">
-        <ThemeProvider>
-          {children}
-        </ThemeProvider>
+        <ThemeProvider>{children}</ThemeProvider>
       </body>
     </html>
   );
