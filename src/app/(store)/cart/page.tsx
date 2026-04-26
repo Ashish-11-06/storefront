@@ -1,153 +1,281 @@
 "use client";
 
-import { useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Trash2 } from "lucide-react";
-
-const initialCartItems = [
-  {
-    id: "1",
-    name: "Rose Bouquet - Premium",
-    price: 220,
-    quantity: 1,
-    image: "/collection/red-roses.png",
-    unit: "1 bunch",
-  },
-  {
-    id: "2",
-    name: "Rose Bouquet - Premium",
-    price: 220,
-    quantity: 1,
-    image: "/collection/red-roses.png",
-    unit: "1 bunch",
-  },
-];
+import { useQuery, useMutation } from "@apollo/client/react";
+import {
+  GET_CART,
+  UPDATE_CART_ITEM,
+  REMOVE_CART_ITEM,
+} from "@/graphql/queries/cartQueries";
+import { useRouter } from "next/navigation";
+import { Skeleton } from "@/components/ui/skeleton";
+import { toast } from "sonner";
 
 export default function CartPage() {
-  const [items, setItems] = useState(initialCartItems);
+  const router = useRouter();
+  const BASE_URL = `${process.env.NEXT_PUBLIC_API_URL}/media/`;
+
+  const { data, loading, error, refetch } = useQuery(GET_CART, {
+    fetchPolicy: "network-only",
+    nextFetchPolicy: "network-only",
+  });
+
+  const [updateCartItem] = useMutation(UPDATE_CART_ITEM);
+  const [removeCartItem] = useMutation(REMOVE_CART_ITEM);
+
+  const items =
+    data?.myCart?.items?.map((item: any) => {
+      const product = item.product;
+      const firstImage = product.images?.[0]?.image;
+
+      return {
+        id: Number(item.id),
+        productId: Number(product.id),
+        name: product.name,
+        price: Number(product.price),
+        discountPrice: Number(product.discountPrice || product.price),
+        quantity: item.quantity,
+        category: product.category?.name,
+        unit: product.unit,
+        measure: product.measureValue,
+        image: firstImage
+          ? firstImage.startsWith("http")
+            ? firstImage
+            : `${BASE_URL}${firstImage}`
+          : "/collection/red-roses.png",
+      };
+    }) || [];
 
   // 🔼 Increase
-  const increase = (id: string) => {
-    setItems((prev) =>
-      prev.map((item) =>
-        item.id === id
-          ? { ...item, quantity: item.quantity + 1 }
-          : item
-      )
-    );
+  const increase = async (item: any) => {
+    await updateCartItem({
+      variables: {
+        cartItemId: item.id,
+        quantity: item.quantity + 1,
+      },
+    });
+    refetch();
   };
 
   // 🔽 Decrease
-  const decrease = (id: string) => {
-    setItems((prev) =>
-      prev.map((item) =>
-        item.id === id
-          ? {
-              ...item,
-              quantity: item.quantity > 1 ? item.quantity - 1 : 1,
-            }
-          : item
-      )
-    );
+  const decrease = async (item: any) => {
+    if (item.quantity <= 1) return;
+
+    await updateCartItem({
+      variables: {
+        cartItemId: item.id,
+        quantity: item.quantity - 1,
+      },
+    });
+    refetch();
   };
 
-  // ❌ Remove item
-  const removeItem = (id: string) => {
-    setItems((prev) => prev.filter((item) => item.id !== id));
+  // ❌ Remove
+  const removeItem = async (item: any) => {
+    try {
+      await removeCartItem({
+        variables: {
+          cartItemId: item.id,
+        },
+      });
+
+      refetch();
+      toast.success(`${item.name} removed from cart!`);
+
+    } catch (err: any) {
+      toast.error(err.message || "Failed to remove item");
+    }
   };
 
-  // 💰 Totals
+  // 💰 Calculations
   const subtotal = items.reduce(
-    (acc, item) => acc + item.price * item.quantity,
+    (acc: number, item: any) => acc + item.discountPrice * item.quantity,
     0
   );
 
-  const shipping = items.length > 0 ? 10 : 0;
-  const total = subtotal + shipping;
+  const originalTotal = items.reduce(
+    (acc: number, item: any) => acc + item.price * item.quantity,
+    0
+  );
 
-  return (
-    <div className="bg-[#f8f8f8] min-h-screen py-14">
-      <div className="max-w-7xl mx-auto px-6">
+  const discount = originalTotal - subtotal;
 
-        {/* HEADER */}
-        <div className="flex items-center gap-4 mb-10">
-          <h1 className="text-xl lg:text-3xl font-serif text-gray-800 tracking-wide">
-            Your Cart
-          </h1>
-          <div className="w-12 h-[1px] bg-gray-400"></div>
-        </div>
+  const shipping = items.length > 0 ? 50 : 0;
+  const tax = subtotal * 0.05; // 5% GST example
 
-        {items.length === 0 ? (
-          <p className="text-gray-500">Your cart is empty.</p>
-        ) : (
+  const total = subtotal + shipping + tax;
+
+  const handleCheckout = () => {
+    if (!items.length) {
+      toast.error("Your cart is empty");
+      return;
+    }
+
+    const cartData = items.map((item: any) => ({
+      id: item.productId,
+      quantity: item.quantity,
+    }));
+
+    const cartString = JSON.stringify(cartData);
+
+    toast("Proceeding to checkout...");
+
+    router.push(`/order-summary?cart=${cartString}`);
+  };
+
+  if (loading) {
+    return (
+      <div className="bg-background min-h-screen py-14 animate-pulse">
+        <div className="max-w-7xl mx-auto px-6">
+
+          {/* HEADER */}
+          <Skeleton className="h-8 w-48 mb-10" />
+
           <div className="grid lg:grid-cols-3 gap-12">
 
-            {/* 🛒 ITEMS */}
+            {/* ITEMS */}
             <div className="lg:col-span-2 space-y-6">
 
-              {items.map((item) => (
+              {Array.from({ length: 3 }).map((_, i) => (
+                <div
+                  key={i}
+                  className="flex justify-between border-b pb-6"
+                >
+                  <div className="flex gap-5">
+
+                    {/* IMAGE */}
+                    <Skeleton className="w-24 h-24 rounded-md" />
+
+                    {/* TEXT */}
+                    <div className="space-y-2">
+                      <Skeleton className="h-4 w-40" />
+                      <Skeleton className="h-3 w-24" />
+                      <Skeleton className="h-3 w-20" />
+                      <Skeleton className="h-4 w-28 mt-2" />
+                    </div>
+                  </div>
+
+                  {/* RIGHT SIDE */}
+                  <div className="flex items-center gap-4">
+
+                    {/* QUANTITY */}
+                    <Skeleton className="h-8 w-24 rounded-full" />
+
+                    {/* DELETE */}
+                    <Skeleton className="h-6 w-6 rounded-full" />
+                  </div>
+                </div>
+              ))}
+
+            </div>
+
+            {/* BILL */}
+            <div className="border rounded-xl p-6 bg-card space-y-4">
+
+              <Skeleton className="h-5 w-40" />
+
+              {Array.from({ length: 5 }).map((_, i) => (
+                <div key={i} className="flex justify-between">
+                  <Skeleton className="h-3 w-24" />
+                  <Skeleton className="h-3 w-16" />
+                </div>
+              ))}
+
+              <Skeleton className="h-10 w-full mt-4 rounded-full" />
+
+            </div>
+
+          </div>
+        </div>
+      </div>
+    );
+  }
+
+  if (error) {
+    return (
+      <div className="py-20 text-center text-destructive">
+        Failed to load cart
+      </div>
+    );
+  }
+
+  return (
+    <div className="bg-background min-h-screen py-14">
+      <div className="max-w-7xl mx-auto px-6">
+
+        <h1 className="text-3xl font-heading mb-10">Your Cart</h1>
+
+        {items.length === 0 ? (
+          <p className="text-muted-foreground">Your cart is empty.</p>
+        ) : (
+          <div className="grid lg:grid-cols-3 gap-12 items-start">
+
+            {/* ITEMS */}
+            <div className="lg:col-span-2 space-y-6">
+
+              {items.map((item: any) => (
                 <div
                   key={item.id}
-                  className="flex items-center justify-between border-b pb-6"
+                  className="flex justify-between border-b pb-6"
                 >
-                  <div className="flex items-center gap-5">
+                  <div className="flex gap-5">
 
-                    {/* Image */}
                     <img
                       src={item.image}
-                      className="w-20 h-20 object-cover rounded-md"
+                      className="w-24 h-24 rounded-md object-cover"
                     />
 
-                    {/* Info */}
                     <div>
-                      <h2 className="text-gray-800 font-medium">
-                        {item.name}
-                      </h2>
+                      <h2 className="font-medium text-lg">{item.name}</h2>
 
-                      <div className="flex items-center gap-3 mt-1 text-sm text-gray-500">
-                        <span>₹{item.price}</span>
+                      <p className="text-sm text-muted-foreground">
+                        {item.category}
+                      </p>
 
-                        {item.unit && (
-                          <span className="bg-gray-100 px-2 py-0.5 rounded-full text-xs">
-                            {item.unit}
+                      <p className="text-sm text-muted-foreground">
+                        {item.measure} {item.unit}
+                      </p>
+
+                      {/* PRICE */}
+                      <div className="mt-2">
+                        <span className="font-semibold text-green-600">
+                          ₹{item.discountPrice}
+                        </span>
+                        {item.price !== item.discountPrice && (
+                          <span className="ml-2 text-sm line-through text-muted-foreground">
+                            ₹{item.price}
                           </span>
                         )}
                       </div>
+
                     </div>
                   </div>
 
                   {/* RIGHT */}
-                  <div className="flex items-center gap-6">
+                  <div className="flex items-center gap-4">
 
-                    {/* 🔢 Quantity Selector */}
-                    <div className="flex items-center border border-gray-200 rounded-full overflow-hidden">
-
+                    <div className="flex border rounded-full">
                       <button
-                        className="px-3 py-1 text-gray-600 hover:bg-gray-100 active:scale-95 transition"
-                        onClick={() => decrease(item.id)}
+                        onClick={() => decrease(item)}
+                        className="px-3"
                       >
                         −
                       </button>
-
-                      <span className="px-4 text-sm font-medium text-gray-800">
-                        {item.quantity}
-                      </span>
-
+                      <span className="px-4">{item.quantity}</span>
                       <button
-                        className="px-3 py-1 text-gray-600 hover:bg-gray-100 active:scale-95 transition"
-                        onClick={() => increase(item.id)}
+                        onClick={() => increase(item)}
+                        className="px-3"
                       >
                         +
                       </button>
-
                     </div>
 
-                    {/* 🗑 Remove */}
                     <button
-                      onClick={() => removeItem(item.id)}
-                      className="text-gray-400 hover:text-rose-500 transition"
+                      onClick={() => removeItem(item)}
+                      className="text-red-500"
                     >
-                      <Trash2 className="w-5 h-5" />
+                      <Trash2 />
                     </button>
 
                   </div>
@@ -156,29 +284,39 @@ export default function CartPage() {
 
             </div>
 
-            {/* 💳 TOTAL */}
-            <div className="border border-gray-200 rounded-xl p-6 bg-white/60 backdrop-blur-sm h-fit">
+            {/* BILL */}
+            <div className="border rounded-xl p-6 bg-card">
 
-              <div className="flex items-center gap-3 mb-6">
-                <h2 className="text-lg font-serif text-gray-800">
-                  Cart Totals
-                </h2>
-                <div className="w-10 h-[1px] bg-gray-400"></div>
-              </div>
+              <h2 className="text-lg font-semibold mb-4">Bill Summary</h2>
 
-              <div className="space-y-4 text-sm">
+              <div className="space-y-3 text-sm">
 
-                <div className="flex justify-between text-gray-600">
+                <div className="flex justify-between">
+                  <span>Items ({items.length})</span>
+                  <span>₹{originalTotal.toFixed(2)}</span>
+                </div>
+
+                <div className="flex justify-between text-green-600">
+                  <span>Discount</span>
+                  <span>- ₹{discount.toFixed(2)}</span>
+                </div>
+
+                <div className="flex justify-between">
                   <span>Subtotal</span>
                   <span>₹{subtotal.toFixed(2)}</span>
                 </div>
 
-                <div className="flex justify-between text-gray-600">
+                <div className="flex justify-between">
                   <span>Shipping</span>
                   <span>₹{shipping}</span>
                 </div>
 
-                <div className="flex justify-between font-medium text-gray-900 border-t pt-4">
+                <div className="flex justify-between">
+                  <span>GST (5%)</span>
+                  <span>₹{tax.toFixed(2)}</span>
+                </div>
+
+                <div className="flex justify-between border-t pt-3 font-semibold text-lg">
                   <span>Total</span>
                   <span>₹{total.toFixed(2)}</span>
                 </div>
@@ -186,7 +324,7 @@ export default function CartPage() {
               </div>
 
               <Button
-                variant="premium"
+                onClick={handleCheckout}
                 className="w-full mt-6 rounded-full py-3"
               >
                 Proceed to Checkout

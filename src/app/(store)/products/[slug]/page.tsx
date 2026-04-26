@@ -1,194 +1,339 @@
-import { getProductBySlug } from "@/lib/getProductBySlug";
-import { notFound } from "next/navigation";
+"use client";
+
+import { useQuery, useMutation } from "@apollo/client/react";
+import { GET_PRODUCTS } from "@/graphql/queries/productQueries";
+import { ADD_TO_CART } from "@/graphql/queries/cartQueries";
+import { useParams } from "next/navigation";
 import { Button } from "@/components/ui/button";
 import { Star, Truck, ShieldCheck, RotateCcw } from "lucide-react";
+import Image from "next/image";
+import { useState, useEffect, useMemo } from "react";
+import { useRouter } from "next/navigation";
+import { GET_STOCK } from "@/graphql/queries/productQueries";
 
-type Props = {
-  params: Promise<{ slug: string }>;
+export default function ProductDetailPage(){
+const router = useRouter();
+const params = useParams();
+const [quantity, setQuantity] = useState(1);
+const [isInCart, setIsInCart] = useState(false);
+const slug = params.slug as string;
+
+const id = Number(slug.split("-").pop());
+const BASE_URL = `${process.env.NEXT_PUBLIC_API_URL}/media/`;
+
+const { data, loading, error } = useQuery(GET_PRODUCTS, {
+  variables: {
+    first: 50,
+    search: "",
+    after: null,
+  },
+});
+
+const [addToCart, { loading: cartLoading }] = useMutation(ADD_TO_CART);
+
+const PLACEHOLDER = "https://via.placeholder.com/500x500?text=No+Image";
+
+const products = data?.products?.products || [];
+const product = products.find((p: any) => Number(p.id) === id);
+const { data: stockData } = useQuery(GET_STOCK, {
+  variables: { productId: id },
+  skip: !product,
+});
+
+const availableQty = stockData?.stock?.availableQuantity || 0;
+const isOutOfStock = availableQty === 0;
+// ✅ Safe images processing
+const images = useMemo(() => {
+  if (!product?.images?.length) return [PLACEHOLDER];
+
+  const validImages = product.images
+    .map((img: any) => {
+      if (!img?.image) return null;
+
+      return img.image.startsWith("http")
+        ? img.image
+        : `${BASE_URL}${img.image}`;
+    })
+    .filter(Boolean);
+
+  return validImages.length > 0 ? validImages : [PLACEHOLDER];
+}, [product]);
+
+// ✅ Initialize properly (never empty)
+const [selectedImage, setSelectedImage] = useState<string>(PLACEHOLDER);
+
+// ✅ Sync when images change
+useEffect(() => {
+  if (images.length > 0) {
+    setSelectedImage(images[0]);
+  }
+}, [images]);
+useEffect(() => {
+  if (product) {
+    setIsInCart(product.isAddedcart || false);
+  }
+}, [product]);
+
+const handleAddToCart = async () => {
+  if (!product) return;
+
+  try {
+    await addToCart({
+      variables: {
+        productId: Number(product.id),
+        quantity,
+      },
+      update(cache) {
+        cache.modify({
+          fields: {
+            products(existingData = {}) {
+              return {
+                ...existingData,
+                products: existingData.products.map((p: any) =>
+                  Number(p.id) === Number(product.id)
+                    ? { ...p, isAddedcart: true }
+                    : p
+                ),
+              };
+            },
+          },
+        });
+      },
+    });
+
+    setIsInCart(true);
+  } catch (err) {
+    console.error(err);
+  }
 };
 
-export async function generateMetadata({ params }: Props) {
-  const { slug } = await params;
-  const product = getProductBySlug(slug);
+const handleOrderNow = () => {
+  if (!product) return;
+  const params = new URLSearchParams({
+    productId: String(product.id),
+    quantity: String(quantity),
+  });
 
-  if (!product) return { title: "Product Not Found" };
+  router.push(`/order-summary?${params.toString()}`);
+};
 
-  return {
-    title: product.name,
-    description: `Buy ${product.name} at best price ₹${product.price}`,
-  };
-}
 
-export default async function ProductDetailPage({ params }: Props) {
-  const { slug } = await params;
-  const product = getProductBySlug(slug);
-
-  if (!product) return notFound();
-
+if (!id) {
   return (
-    <div className="bg-[#f8f8f8] min-h-screen py-14">
-
-      <div className="max-w-7xl mx-auto px-6 space-y-20">
-
-        {/* ================= TOP SECTION ================= */}
-        <div className="grid lg:grid-cols-2 gap-14">
-
-          {/* 🌸 LEFT IMAGES */}
-          <div className="flex gap-4">
-
-            {/* Thumbnails */}
-            <div className="flex flex-col gap-3">
-              {[1, 2, 3, 4].map((_, i) => (
-                <img
-                  key={i}
-                  src={product.image}
-                  className="w-16 h-16 object-cover rounded-md border border-gray-200 cursor-pointer hover:opacity-80 transition"
-                />
-              ))}
-            </div>
-
-            {/* Main */}
-            <div className="flex-1">
-              <img
-                src={product.image}
-                alt={product.name}
-                className="w-full h-[520px] object-cover rounded-xl shadow-sm"
-              />
-            </div>
-          </div>
-
-          {/* 🌼 RIGHT DETAILS */}
-          <div className="space-y-6">
-
-            {/* Title */}
-            <h1 className="text-3xl lg:text-4xl font-serif text-gray-800 leading-snug">
-              {product.name}
-            </h1>
-
-            {/* Rating */}
-            <div className="flex items-center gap-2 text-sm">
-              <div className="flex text-rose-400">
-                {[...Array(5)].map((_, i) => (
-                  <Star key={i} className="w-4 h-4 fill-current" />
-                ))}
-              </div>
-              <span className="text-gray-500">(120 reviews)</span>
-            </div>
-
-            {/* Price */}
-            <div className="text-2xl font-semibold text-gray-900">
-              ₹{product.price.toLocaleString()}
-            </div>
-
-            {/* Unit */}
-            {product.unit && (
-              <span className="inline-block text-xs bg-gray-100 px-3 py-1 rounded-full text-gray-600">
-                {product.unit}
-              </span>
-            )}
-
-            {/* Description */}
-            <p className="text-gray-600 leading-relaxed">
-              Fresh and handpicked {product.name.toLowerCase()} crafted to bring
-              elegance, fragrance, and joy to every occasion.
-            </p>
-
-            {/* CTA */}
-            <Button
-              variant="premium"
-              className="rounded-full px-8 py-3 text-sm font-medium"
-            >
-              Add to Cart
-            </Button>
-
-            {/* Trust (UPGRADED) */}
-            <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 pt-6 border-t text-sm">
-
-              <div className="flex items-center gap-2">
-                <Truck className="w-4 h-4 text-rose-400" />
-                <span className="text-gray-600">Same-day delivery</span>
-              </div>
-
-              <div className="flex items-center gap-2">
-                <ShieldCheck className="w-4 h-4 text-rose-400" />
-                <span className="text-gray-600">Freshness guarantee</span>
-              </div>
-
-              <div className="flex items-center gap-2">
-                <RotateCcw className="w-4 h-4 text-rose-400" />
-                <span className="text-gray-600">Easy returns</span>
-              </div>
-
-            </div>
-
-          </div>
-        </div>
-
-        {/* ================= DESCRIPTION ================= */}
-        <div>
-
-          {/* Tabs */}
-          <div className="flex items-center gap-8 border-b text-sm">
-            <button className="pb-3 border-b-2 border-black font-medium">
-              Description
-            </button>
-            <button className="pb-3 text-gray-500 hover:text-black transition">
-              Reviews (120)
-            </button>
-          </div>
-
-          {/* Content */}
-          <div className="mt-6 border border-gray-200 rounded-xl p-6 bg-white/60 backdrop-blur-sm">
-            <p className="text-gray-600 leading-relaxed mb-4">
-              Fresh and handpicked {product.name.toLowerCase()} crafted with care.
-              Perfect for gifting, celebrations, pooja rituals, and special occasions.
-            </p>
-
-            <p className="text-gray-600 leading-relaxed">
-              Our flowers are sourced from premium farms ensuring freshness,
-              fragrance, and long-lasting beauty for every arrangement.
-            </p>
-          </div>
-        </div>
-
-        {/* ================= RELATED ================= */}
-        <div>
-
-          {/* Heading */}
-          <div className="flex items-center gap-4 justify-center mb-12">
-            <h2 className="text-xl lg:text-2xl font-serif text-gray-800 tracking-wide">
-              Related Products
-            </h2>
-            <div className="w-12 h-[1px] bg-gray-400"></div>
-          </div>
-
-          {/* Grid */}
-          <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-8">
-
-            {[1, 2, 3, 4, 5].map((_, i) => (
-              <div key={i} className="group">
-
-                <div className="bg-gray-100 rounded-lg overflow-hidden">
-                  <img
-                    src={product.image}
-                    className="w-full h-52 object-cover group-hover:scale-105 transition duration-300"
-                  />
-                </div>
-
-                <h3 className="text-sm mt-3 text-gray-700 truncate group-hover:text-black transition">
-                  {product.name}
-                </h3>
-
-                <p className="text-sm text-gray-900 font-medium">
-                  ₹{product.price}
-                </p>
-              </div>
-            ))}
-
-          </div>
-        </div>
-
-      </div>
+    <div className="text-center py-20 text-foreground">
+      Invalid product
     </div>
   );
+}
+
+if (loading) {
+  return (
+    <div className="text-center py-20 text-muted-foreground">
+      Loading product...
+    </div>
+  );
+}
+
+if (error) {
+  return (
+    <div className="text-center py-20 text-destructive">
+      Error loading product
+    </div>
+  );
+}
+
+if (!product) {
+  return (
+    <div className="text-center py-20 text-muted-foreground">
+      Product not found
+    </div>
+  );
+}
+
+return (
+  <div className="bg-background min-h-screen py-14">
+    <div className="max-w-7xl mx-auto px-6 space-y-20">
+
+      <div className="grid lg:grid-cols-2 gap-14 items-start">
+
+        {/* IMAGES */}
+        <div className="flex gap-5">
+
+          {/* Thumbnails */}
+          <div className="flex flex-col gap-3">
+            {images.map((img: string, i: number) => (
+              <div
+                key={i}
+                onClick={() => setSelectedImage(img)}
+                className={`
+                    cursor-pointer rounded-lg overflow-hidden border transition-all duration-200
+                    ${selectedImage === img
+                    ? "border-primary ring-2 ring-primary/30 scale-105"
+                    : "border-border hover:border-primary/40 hover:scale-105"
+                  }
+                  `}
+              >
+                <Image
+                  src={img || PLACEHOLDER}
+                  alt="thumbnail"
+                  width={70}
+                  height={70}
+                  className="object-cover"
+                  unoptimized
+                />
+              </div>
+            ))}
+          </div>
+
+          {/* Main Image */}
+          <div className="flex-1 rounded-2xl overflow-hidden bg-card border border-border shadow-sm">
+            <Image
+              src={selectedImage || PLACEHOLDER}
+              alt={product.name}
+              width={600}
+              height={600}
+              className="w-full h-[520px] object-cover transition-transform duration-500 hover:scale-105"
+              unoptimized
+            />
+          </div>
+
+        </div>
+
+        {/* DETAILS */}
+        <div className="space-y-6">
+
+          <h1 className="text-4xl font-heading font-semibold text-foreground leading-tight">
+            {product.name}
+          </h1>
+
+          {/* Rating */}
+          <div className="flex items-center gap-3 text-sm">
+            <div className="flex text-primary">
+              {[...Array(5)].map((_, i) => (
+                <Star key={i} className="w-4 h-4 fill-current" />
+              ))}
+            </div>
+            <span className="text-muted-foreground">(120 reviews)</span>
+          </div>
+
+          {/* Price */}
+          <div className="flex items-center gap-3">
+            <span className="text-3xl font-semibold text-foreground">
+              ₹{product.discountPrice || product.price}
+            </span>
+
+            {product.discountPrice && (
+              <span className="text-muted-foreground line-through text-lg">
+                ₹{product.price}
+              </span>
+            )}
+          </div>
+
+          {/* Stock */}
+          <p
+            className={`text-sm font-medium ${isOutOfStock ? "text-destructive" : "text-primary"
+              }`}
+          >
+            {isOutOfStock ? "Out of Stock" : "In Stock"}
+          </p>
+
+          {/* Description */}
+          <p className="text-muted-foreground leading-relaxed">
+            {product.description}
+          </p>
+          <div className="flex items-center border border-border rounded-full overflow-hidden w-fit">
+            <button
+              onClick={() => setQuantity((q) => Math.max(1, q - 1))}
+              className="px-3 py-1 hover:bg-muted"
+            >
+              −
+            </button>
+
+            <span className="px-3 text-sm">{quantity}</span>
+
+            <button
+              onClick={() => setQuantity((q) => q + 1)}
+              className="px-3 py-1 hover:bg-muted"
+            >
+              +
+            </button>
+          </div>
+          {/* Buttons */}
+          <div className="flex flex-col sm:flex-row gap-4 pt-2">
+
+            <Button
+              size="lg"
+              onClick={() => {
+                if (isInCart) {
+                  router.push("/cart"); // ✅ go to cart
+                } else {
+                  handleAddToCart();
+                }
+              }}
+              disabled={cartLoading}
+              className={`flex-1 rounded-full py-3 text-base shadow-md hover:shadow-lg transition ${isInCart ? "bg-green-600 hover:bg-green-600 text-white" : ""
+                }`}
+            >
+              {cartLoading ? (
+                "Adding..."
+              ) : isInCart ? (
+                "Go to Cart"
+              ) : (
+                "Add to Cart"
+              )}
+            </Button>
+
+            <Button
+              variant="outline"
+              size="lg"
+              onClick={handleOrderNow}
+              disabled={isOutOfStock || !product}
+              className="flex-1 rounded-full py-3 text-base border-primary text-primary hover:bg-primary hover:text-white"
+            >
+              Order Now
+            </Button>
+
+            <Button
+              variant="outline"
+              size="lg"
+              className="flex-1 rounded-full py-3 text-base hover:bg-muted"
+            >
+              Bulk Order
+            </Button>
+
+          </div>
+
+          {/* Features */}
+          <div className="grid grid-cols-3 gap-4 pt-6 border-t border-border text-sm">
+
+            <div className="flex items-center gap-2 text-muted-foreground">
+              <Truck className="w-4 h-4 text-primary" />
+              Same-day delivery
+            </div>
+
+            <div className="flex items-center gap-2 text-muted-foreground">
+              <ShieldCheck className="w-4 h-4 text-primary" />
+              Freshness guarantee
+            </div>
+
+            <div className="flex items-center gap-2 text-muted-foreground">
+              <RotateCcw className="w-4 h-4 text-primary" />
+              Easy returns
+            </div>
+
+          </div>
+
+        </div>
+      </div>
+
+      {/* Bottom Description */}
+      <div className="border border-border p-6 rounded-xl bg-card">
+        <p className="text-muted-foreground">
+          {product.description}
+        </p>
+      </div>
+
+    </div>
+  </div>
+);
 }

@@ -1,82 +1,263 @@
 "use client";
 
 import Link from "next/link";
-import { Product } from "@/types/product";
 import { Button } from "@/components/ui/button";
-import { Heart, Star, ShoppingCart } from "lucide-react";
+import { ShoppingCart, Heart, Zap, Check } from "lucide-react";
+import { useState, useEffect } from "react";
+import { useMutation } from "@apollo/client/react";
+import {
+  ADD_TO_WISHLIST,
+  REMOVE_FROM_WISHLIST,
+} from "@/graphql/queries/wishlistQueries";
+import { ADD_TO_CART } from "@/graphql/queries/cartQueries";
+import { GET_STOCK } from "@/graphql/queries/productQueries";
+import { useQuery } from "@apollo/client/react";
+import { useRouter } from "next/navigation";
+import { toast } from "sonner";
+
 interface Props {
-  product: Product;
+  product: any;
 }
 
 export default function ProductCard({ product }: Props) {
+  const BASE_URL = `${process.env.NEXT_PUBLIC_API_URL}/media/`;
+  const router = useRouter();
+
+  /* ================= IMAGE ================= */
+  const image = product.images?.[0]?.image
+    ? `${BASE_URL}${product.images[0].image}`
+    : "/placeholder.png";
+
+  /* ================= SLUG ================= */
+  const slug = `${(product.name || "product")
+    .toLowerCase()
+    .replace(/[^a-z0-9\s-]/g, "")
+    .replace(/\s+/g, "-")}-${product.id}`;
+
+  /* ================= PRICE ================= */
+  const price = Number(product.price || 0);
+  const discountPrice = Number(product.discountPrice || product.price || 0);
+  const { data: stockData, loading: stockLoading } = useQuery(GET_STOCK, {
+    variables: { productId: Number(product.id) },
+  });
+  /* ================= CATEGORY ================= */
+  const categoryName = product.category?.name || "General";
+
+  /* ================= UNIT ================= */
+  const unitText =
+    product.unit && product.measureValue
+      ? `${product.measureValue} ${product.unit}`
+      : null;
+
+  /* ================= STATE ================= */
+  const [isWishlisted, setIsWishlisted] = useState(
+    product.isWishlisted || false
+  );
+
+  const [isInCart, setIsInCart] = useState(
+    product.isAddedcart || false
+  );
+
+  const [quantity, setQuantity] = useState(1);
+
+  /* Sync when product changes */
+  useEffect(() => {
+    setIsWishlisted(product.isWishlisted || false);
+    setIsInCart(product.isAddedcart || false);
+  }, [product]);
+
+  const [addToWishlist] = useMutation(ADD_TO_WISHLIST);
+  const [removeFromWishlist] = useMutation(REMOVE_FROM_WISHLIST);
+  const [addToCart] = useMutation(ADD_TO_CART);
+  const availableStock = stockData?.stock?.availableQuantity ?? 0;
+  const isOutOfStock = availableStock === 0;
+  /* ================= HANDLERS ================= */
+
+  const handleWishlistToggle = async () => {
+    try {
+      if (isWishlisted) {
+        await removeFromWishlist({
+          variables: { productId: Number(product.id) },
+        });
+
+        setIsWishlisted(false);
+        toast.success("Removed from wishlist!");
+
+      } else {
+        await addToWishlist({
+          variables: { productId: Number(product.id) },
+        });
+
+        setIsWishlisted(true);
+        toast.success("Added to wishlist!");
+      }
+
+    } catch (err: any) {
+      toast.error(err.message || "Wishlist update failed");
+    }
+  };
+
+  const handleAddToCart = async () => {
+    try {
+      await addToCart({
+        variables: {
+          productId: Number(product.id),
+          quantity,
+        },
+      });
+
+      setIsInCart(true);
+
+      toast.success("Added to cart!");
+
+    } catch (err: any) {
+      toast.error(err.message || "Failed to add to cart");
+    }
+  };
+
+  const handleOrderNow = () => {
+    const params = new URLSearchParams({
+      productId: String(product.id),
+      quantity: String(quantity),
+    });
+
+    router.push(`/order-summary?${params.toString()}`);
+  };
+
+  /* ================= UI ================= */
+
   return (
-    <div className="group relative rounded-lg bg-white/70 backdrop-blur-md border border-white/40 shadow-sm hover:shadow-xl transition-all duration-500 overflow-hidden">
+    <div className="group relative rounded-lg bg-card border border-border shadow-sm overflow-hidden hover:shadow-md transition">
 
-      {/* 🌸 Soft Gradient Glow */}
-      {/* <div className="absolute inset-0 opacity-0 group-hover:opacity-100 transition duration-500 bg-linear-to-br from-pink-300/10 to-rose-300/20"></div> */}
+      {/* ❤️ Wishlist */}
+      <button
+        onClick={handleWishlistToggle}
+        className="absolute top-3 right-3 z-10 p-2 rounded-full bg-background/80 backdrop-blur cursor-pointer"
+      >
+        <Heart
+          className={`w-5 h-5 ${isWishlisted
+            ? "fill-red-500 text-red-500"
+            : "text-muted-foreground"
+            }`}
+        />
+      </button>
 
-      <Link href={`/products/${product.slug}`}>
-
-        {/* IMAGE */}
-        <div className="relative overflow-hidden rounded-lg">
-
+      {/* Product */}
+      <Link href={`/products/${slug}`}>
+        <div>
           <img
-            src={product.image}
+            src={image}
             alt={product.name}
-            className="w-full h-56 object-cover transition-transform duration-500 group-hover:scale-110 rounded-b-lg"
+            className="w-full h-56 object-cover"
           />
 
-          {/* Wishlist */}
-          <button className="absolute top-3 right-3 p-2 bg-white/70 backdrop-blur-md rounded-full shadow-sm opacity-0 group-hover:opacity-100 transition hover:bg-white">
-            <Heart className="w-4 h-4 text-gray-600 hover:text-rose-500 transition" />
-          </button>
+          <div className="p-4 space-y-1">
 
-          {/* Rating */}
-          {/* <div className="absolute top-3 left-3 bg-white/80 backdrop-blur-md rounded-full px-2 py-1 flex items-center gap-1 shadow-sm">
-            <Star className="w-3 h-3 fill-yellow-400 text-yellow-400" />
-            <span className="text-xs font-medium text-gray-700">4.5</span>
-          </div> */}
-        </div>
+            {/* Category */}
+            <p className="text-xs text-primary font-medium">
+              {categoryName}
+            </p>
 
-        {/* CONTENT */}
-        <div className="p-5 space-y-2 relative z-10">
+            {/* Name */}
+            <h2 className="font-medium text-foreground">
+              {product.name}
+            </h2>
 
-          {/* Title */}
-          <h2 className="font-medium text-gray-800 text-lg leading-snug truncate group-hover:text-black transition">
-            {product.name}
-          </h2>
+            {/* Unit */}
+            {unitText && (
+              <p className="text-xs text-muted-foreground">
+                {unitText}
+              </p>
+            )}
 
-          {/* Unit (FIXED POSITION ✅) */}
-          {product.unit && (
-            <span className="inline-block text-xs bg-gray-100 text-gray-600 px-2 py-1 rounded-full">
-              {product.unit}
-            </span>
-          )}
+            {/* Price */}
+            <div className="flex gap-2 items-center">
+              <span className="font-semibold text-primary">
+                ₹{discountPrice}
+              </span>
 
-          {/* Price */}
-          <div className="flex items-center gap-2 mt-1">
-            <span className="text-lg font-semibold text-gray-900">
-              ₹{product.price.toLocaleString()}
-            </span>
-            <span className="text-sm text-gray-400 line-through">
-              ₹{(product.price * 1.2).toLocaleString()}
-            </span>
-            <span className="text-xs text-green-600 font-medium">
-              17% off
-            </span>
+              {discountPrice < price && (
+                <span className="line-through text-muted-foreground text-sm">
+                  ₹{price}
+                </span>
+              )}
+            </div>
+
           </div>
         </div>
       </Link>
 
       {/* CTA */}
-      <div className="px-5 pb-5">
-        <Button
-          variant="premium"
-          className="w-full rounded-full gap-2 font-medium tracking-wide"
-        >
-          <ShoppingCart className="w-4 h-4" />
-          Add to Cart
-        </Button>
+      <div className="p-4 space-y-3">
+
+        {/* Quantity */}
+        <div className="flex justify-start">
+          <div className="flex items-center border rounded-full overflow-hidden">
+            <button
+              onClick={() => setQuantity((q) => Math.max(1, q - 1))}
+              className="px-3 py-1 hover:bg-muted cursor-pointer"
+            >
+              −
+            </button>
+
+            <span className="px-3 text-sm">{quantity}</span>
+
+            <button
+              onClick={() => setQuantity((q) => q + 1)}
+              className="px-3 py-1 hover:bg-muted cursor-pointer"
+            >
+              +
+            </button>
+          </div>
+        </div>
+
+        {/* Buttons */}
+        <div className="flex gap-2">
+
+          {isOutOfStock ? (
+            <Button
+              disabled
+              className="w-full bg-gray-400 cursor-not-allowed"
+            >
+              Out of Stock
+            </Button>
+          ) : (
+            <>
+              <Button
+                onClick={() => {
+                  if (isInCart) {
+                    router.push("/cart");
+                  } else {
+                    handleAddToCart();
+                  }
+                }}
+                className={`flex-1 ${isInCart ? "bg-green-600 hover:bg-green-600" : ""}`}
+              >
+                {isInCart ? (
+                  <>
+                    <ShoppingCart className="w-4 h-4 mr-1" />
+                    Go to Cart
+                  </>
+                ) : (
+                  <>
+                    <ShoppingCart className="w-4 h-4 mr-1" />
+                    Add to Cart
+                  </>
+                )}
+              </Button>
+
+              <Button
+                onClick={handleOrderNow}
+                variant="outline"
+                className="flex-1 border-primary text-primary hover:bg-primary hover:text-white"
+              >
+                <Zap className="w-4 h-4 mr-1" />
+                Buy
+              </Button>
+            </>
+          )}
+
+        </div>
       </div>
     </div>
   );

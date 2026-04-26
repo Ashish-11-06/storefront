@@ -3,282 +3,557 @@
 import { useState } from "react";
 import { Button } from "@/components/ui/button";
 import {
-    User,
-    MapPin,
-    Pencil,
-    Plus,
-    ShoppingBag,
-    Heart,
-    CreditCard,
-    Gift,
-    Wallet,
-    ChevronRight,
-    Phone,
-    Crown,
+  MapPin,
+  Pencil,
+  ShoppingBag,
+  Heart,
+  CreditCard,
+  Phone,
+  ShoppingCart,
+  Mail,
 } from "lucide-react";
 
-type Address = {
-    id: string;
-    name: string;
-    phone: string;
-    address: string;
-};
+import { useQuery, useMutation } from "@apollo/client/react";
+import {
+  GET_PROFILE,
+  UPDATE_CUSTOMER,
+  ADD_ADDRESS,
+  EDIT_ADDRESS,
+} from "@/graphql/queries/profileQueries";
+import Link from "next/link";
+import { Skeleton } from "@/components/ui/skeleton";
+import { toast } from "sonner";
 
 export default function ProfilePage() {
-    const [addresses, setAddresses] = useState<Address[]>([
-        {
-            id: "1",
-            name: "Atharva Kadam",
-            phone: "9876543210",
-            address: "Pune, Maharashtra, India",
+  const [showEdit, setShowEdit] = useState(false);
+  const [showAddressModal, setShowAddressModal] = useState(false);
+  const [showEditAddressModal, setShowEditAddressModal] = useState(false);
+  const [selectedAddressId, setSelectedAddressId] = useState<number | null>(null);
+  const [editForm, setEditForm] = useState({
+    firstName: "",
+    lastName: "",
+    phone: "",
+  });
+
+  const [addressForm, setAddressForm] = useState({
+    name: "",
+    phone: "",
+    city: "",
+    state: "",
+    pincode: "",
+    landmark: "",
+    isDefault: false,
+  });
+
+  // ✅ QUERY
+  const { data, loading, error, refetch } = useQuery(GET_PROFILE);
+
+  // ✅ MUTATIONS
+  const [updateCustomer, { loading: updating }] =
+    useMutation(UPDATE_CUSTOMER);
+
+  const [addAddress, { loading: addingAddress }] =
+    useMutation(ADD_ADDRESS);
+
+  const [editAddress, { loading: editingAddress }] =
+    useMutation(EDIT_ADDRESS);
+  // ✅ DATA
+  const customer = data?.myCustomer;
+  const user = customer?.user;
+  const addresses = customer?.addresses || [];
+
+  if (loading) {
+    return (
+      <div className="bg-[#f8f8f8] min-h-screen py-14">
+        <div className="max-w-5xl mx-auto px-6 space-y-10">
+
+          {/* HEADER */}
+          <Skeleton className="h-8 w-40" />
+
+          {/* PROFILE */}
+          <div className="bg-white p-6 rounded-xl flex items-center justify-between">
+            <div className="flex items-center gap-4">
+              <Skeleton className="w-14 h-14 rounded-full" />
+
+              <div className="space-y-2">
+                <Skeleton className="h-5 w-40" />
+                <Skeleton className="h-4 w-60" />
+                <Skeleton className="h-4 w-40" />
+              </div>
+            </div>
+
+            <Skeleton className="h-8 w-24 rounded-full" />
+          </div>
+
+          {/* QUICK LINKS */}
+          <div className="grid grid-cols-2 sm:grid-cols-4 gap-4">
+            {[1, 2, 3, 4].map((_, i) => (
+              <Skeleton key={i} className="h-20 rounded-xl" />
+            ))}
+          </div>
+
+          {/* ADDRESS */}
+          <div>
+            <Skeleton className="h-6 w-40 mb-4" />
+
+            {[1, 2].map((_, i) => (
+              <div
+                key={i}
+                className="bg-white p-4 rounded mb-3 border space-y-2"
+              >
+                <Skeleton className="h-4 w-32" />
+                <Skeleton className="h-3 w-40" />
+                <Skeleton className="h-3 w-60" />
+              </div>
+            ))}
+          </div>
+        </div>
+      </div>
+    );
+  }
+
+  if (error)
+    return <div className="p-10 text-red-500">Error loading profile</div>;
+
+  // ✅ UPDATE PROFILE
+  const handleUpdateProfile = async () => {
+    try {
+      await updateCustomer({
+        variables: {
+          id: customer?.id,
+          firstName: editForm.firstName,
+          lastName: editForm.lastName,
+          phone: editForm.phone,
         },
-    ]);
+      });
 
-    const [editing, setEditing] = useState<Address | null>(null);
-    const [showForm, setShowForm] = useState(false);
+      await refetch();
+      setShowEdit(false);
 
-    const [form, setForm] = useState<Address>({
-        id: "",
+      toast.success("Profile updated successfully!");
+
+    } catch (err: any) {
+      toast.error(err.message || "Failed to update profile");
+    }
+  };
+
+  // ✅ ADD ADDRESS
+  const handleAddAddress = async () => {
+    if (!addressForm.name || !addressForm.phone || !addressForm.city) {
+      toast.error("Please fill required fields ❗");
+      return;
+    }
+
+    try {
+      await addAddress({
+        variables: {
+          ...addressForm,
+        },
+      });
+
+      await refetch();
+
+      setShowAddressModal(false);
+
+      setAddressForm({
         name: "",
         phone: "",
-        address: "",
+        city: "",
+        state: "",
+        pincode: "",
+        landmark: "",
+        isDefault: false,
+      });
+
+      toast.success("Address added successfully!");
+
+    } catch (err: any) {
+      toast.error(err.message || "Failed to add address");
+    }
+  };
+
+
+  const handleEditClick = (addr: any) => {
+    setSelectedAddressId(Number(addr.id));
+
+    setAddressForm({
+      name: addr.name || "",
+      phone: addr.phone || "",
+      city: addr.city || "",
+      state: addr.state || "",
+      pincode: addr.pincode || "",
+      landmark: addr.landmark || "",
+      isDefault: addr.isDefault || false,
     });
 
-    const handleSubmit = () => {
-        if (editing) {
-            setAddresses((prev) =>
-                prev.map((addr) => (addr.id === editing.id ? form : addr))
-            );
-        } else {
-            setAddresses((prev) => [
-                ...prev,
-                { ...form, id: Date.now().toString() },
-            ]);
-        }
+    setShowEditAddressModal(true);
+  };
 
-        setForm({ id: "", name: "", phone: "", address: "" });
-        setEditing(null);
-        setShowForm(false);
-    };
+  const handleUpdateAddress = async () => {
+    try {
+      await editAddress({
+        variables: {
+          addressId: Number(selectedAddressId),
+          ...addressForm,
+        },
+      });
 
-    const handleEdit = (addr: Address) => {
-        setEditing(addr);
-        setForm(addr);
-        setShowForm(true);
-    };
+      await refetch();
+      setShowEditAddressModal(false);
 
-    return (
-        <div className="bg-[#f8f8f8] h-[92vh] py-14">
-            <div className="max-w-5xl mx-auto px-6 space-y-10">
+      toast.success("Address updated successfully!");
 
-                {/* HEADER */}
-                <div className="flex items-center gap-4">
-                    <h1 className="text-2xl lg:text-3xl font-[var(--font-heading)] text-gray-800">
-                        My Profile
-                    </h1>
-                    <div className="w-12 h-[1px] bg-gray-400"></div>
-                </div>
+    } catch (err: any) {
+      toast.error(err.message || "Failed to update address");
+    }
+  };
 
-                {/* PROFILE CARD */}
-                <div className="relative overflow-hidden rounded-3xl border bg-white/70 backdrop-blur-xl p-6 shadow-sm">
-                    <div className="absolute inset-0 bg-gradient-to-r from-rose-50 to-pink-50 opacity-50" />
+  return (
+    <div className="bg-[#f8f8f8] min-h-screen py-14">
+      <div className="max-w-5xl mx-auto px-6 space-y-10">
 
-                    <div className="relative flex flex-col lg:flex-row justify-between gap-6">
+        {/* HEADER */}
+        <h1 className="text-2xl font-semibold">My Profile</h1>
 
-                        <div className="flex items-center gap-5">
-                            <div className="w-16 h-16 rounded-full bg-gradient-to-br from-rose-400 to-pink-500 flex items-center justify-center text-white font-semibold text-lg">
-                                AK
-                            </div>
-
-                            <div>
-                                <h2 className="text-xl font-semibold text-gray-900">
-                                    Atharva Kadam
-                                </h2>
-                                <p className="text-sm text-gray-500">atharva@email.com</p>
-
-                                <div className="flex gap-4 mt-4 text-xs text-gray-500">
-
-                                    <span className="flex items-center gap-1">
-                                        <Phone className="w-3.5 h-3.5 text-gray-400" />
-                                        9876543210
-                                    </span>
-
-                                    <span className="flex items-center gap-1">
-                                        <MapPin className="w-3.5 h-3.5 text-gray-400" />
-                                        Pune
-                                    </span>
-
-                                </div>
-
-                                <div className="flex gap-6 mt-4">
-                                    <div>
-                                        <p className="font-semibold text-gray-900">12</p>
-                                        <p className="text-xs text-gray-500">Orders</p>
-                                    </div>
-                                    <div>
-                                        <p className="font-semibold text-gray-900">5</p>
-                                        <p className="text-xs text-gray-500">Wishlist</p>
-                                    </div>
-                                </div>
-                            </div>
-                        </div>
-
-                        <div className="flex flex-col items-start gap-3">
-
-                            {/* Membership Badge */}
-                            <div className="flex items-center gap-2 px-3 py-1 rounded-full bg-gradient-to-r from-rose-500 to-pink-500 text-white text-xs font-medium shadow-sm">
-                                <Crown className="w-3.5 h-3.5" />
-                                Premium Member
-                            </div>
-
-                            {/* Edit Button */}
-                            <button className="flex items-center gap-2 px-4 py-2 text-sm rounded-full border border-gray-300 bg-white hover:bg-gray-50 transition shadow-sm">
-                                <Pencil className="w-4 h-4 text-gray-500" />
-                                <span className="text-gray-700 font-medium">Edit Profile</span>
-                            </button>
-
-                        </div>
-                    </div>
-                </div>
-
-                {/* QUICK ACTIONS */}
-                <div className="grid grid-cols-2 sm:grid-cols-4 gap-4">
-                    {[
-                        { label: "My Orders", icon: ShoppingBag },
-                        { label: "Wishlist", icon: Heart },
-                        { label: "Payments", icon: CreditCard },
-                        { label: "Coupons", icon: Gift },
-                    ].map((item, i) => (
-                        <div
-                            key={i}
-                            className="bg-white rounded-2xl p-4 flex flex-col items-center gap-2 border hover:shadow-md transition"
-                        >
-                            <item.icon className="w-5 h-5 text-rose-500" />
-                            <p className="text-sm font-medium text-black">{item.label}</p>
-                        </div>
-                    ))}
-                </div>
-
-                {/* ADDRESS SECTION */}
-                <div className="space-y-6">
-
-                    <div className="flex justify-between items-center mb-2">
-
-                        <h2 className="text-lg font-[var(--font-heading)] text-gray-900">
-                            Saved Addresses
-                        </h2>
-
-                        <button
-                            className="flex items-center gap-2 px-4 py-2 text-sm rounded-full bg-black text-white hover:opacity-90 transition shadow-sm"
-                            onClick={() => {
-                                setShowForm(true);
-                                setEditing(null);
-                                setForm({ id: "", name: "", phone: "", address: "" });
-                            }}
-                        >
-                            <Plus className="w-4 h-4" />
-                            <span className="font-medium">Add Address</span>
-                        </button>
-
-                    </div>
-
-                    <div className="grid gap-4">
-                        {addresses.map((addr) => (
-                            <div
-                                key={addr.id}
-                                className="border rounded-2xl p-4 bg-white flex justify-between"
-                            >
-                                <div className="flex gap-3">
-                                    <MapPin className="text-rose-500" />
-
-                                    <div>
-                                        <p className="font-medium text-black">{addr.name}</p>
-                                        <p className="text-sm text-gray-500">{addr.phone}</p>
-                                        <p className="text-sm text-gray-600">
-                                            {addr.address}
-                                        </p>
-                                    </div>
-                                </div>
-
-                                <Pencil
-                                    className="w-4 h-4 cursor-pointer"
-                                    onClick={() => handleEdit(addr)}
-                                />
-                            </div>
-                        ))}
-                    </div>
-
-                    {/* FORM */}
-                    {showForm && (
-                        <div className="bg-white p-5 rounded-xl border space-y-3">
-                            <input
-                                placeholder="Name"
-                                value={form.name}
-                                onChange={(e) =>
-                                    setForm({ ...form, name: e.target.value })
-                                }
-                                className="w-full border px-3 py-2 rounded"
-                            />
-
-                            <input
-                                placeholder="Phone"
-                                value={form.phone}
-                                onChange={(e) =>
-                                    setForm({ ...form, phone: e.target.value })
-                                }
-                                className="w-full border px-3 py-2 rounded"
-                            />
-
-                            <textarea
-                                placeholder="Address"
-                                value={form.address}
-                                onChange={(e) =>
-                                    setForm({ ...form, address: e.target.value })
-                                }
-                                className="w-full border px-3 py-2 rounded"
-                            />
-
-                            <div className="flex gap-2">
-                                <Button onClick={handleSubmit}>
-                                    {editing ? "Update" : "Save"}
-                                </Button>
-                                <Button
-                                    variant="outline"
-                                    onClick={() => setShowForm(false)}
-                                >
-                                    Cancel
-                                </Button>
-                            </div>
-                        </div>
-                    )}
-                </div>
-
-                {/* REWARDS */}
-                {/* <div className="bg-white p-5 rounded-2xl border space-y-4">
-                    <h2 className="text-lg font-[var(--font-heading)] text-black">
-                        Rewards & Wallet
-                    </h2>
-
-                    <div className="grid grid-cols-2 gap-4">
-                        <div className="flex justify-between items-center border p-4 rounded-xl">
-                            <div className="flex gap-2 items-center text-black">
-                                <Wallet className="text-green-500" />
-                                Wallet
-                            </div>
-                            <ChevronRight />
-                        </div>
-
-                        <div className="flex justify-between items-center border p-4 rounded-xl">
-                            <div className="flex gap-2 items-center text-black">
-                                <Gift className="text-yellow-500" />
-                                Coupons
-                            </div>
-                            <ChevronRight />
-                        </div>
-                    </div>
-                </div> */}
-
+        {/* PROFILE */}
+        <div className="bg-white p-6 rounded-xl flex items-center justify-between">
+          <div className="flex items-center gap-4">
+            <div className="w-14 h-14 rounded-full bg-gradient-to-br from-rose-400 to-pink-500 flex items-center justify-center text-white font-semibold text-lg">
+              {user?.firstName?.[0]}{user?.lastName?.[0]}
             </div>
+
+            <div>
+              <h2 className="text-2xl font-semibold mb-2">
+                {user?.firstName} {user?.lastName}
+              </h2>
+
+              <p className="flex items-center gap-1 mb-1">
+                <Mail className="w-4 h-4" />
+                {user?.email}
+              </p>
+
+              <p className="flex items-center gap-1">
+                <Phone className="w-4 h-4" />
+                {user?.phone}
+              </p>
+            </div>
+          </div>
+
+          <button
+            onClick={() => {
+              setShowEdit(true);
+              setEditForm({
+                firstName: user?.firstName || "",
+                lastName: user?.lastName || "",
+                phone: user?.phone || "",
+              });
+            }}
+            className="flex items-center gap-2 px-4 py-2 text-sm rounded-full border cursor-pointer"
+          >
+            <Pencil className="w-4 h-4" />
+            Edit Profile
+          </button>
         </div>
-    );
+
+        {/* QUICK LINKS */}
+        <div className="grid grid-cols-2 sm:grid-cols-4 gap-4">
+          {[
+            { label: "Orders", icon: ShoppingBag, link: "/orders" },
+            { label: "Wishlist", icon: Heart, link: "/wishlist" },
+            { label: "Cart", icon: ShoppingCart, link: "/cart" },
+            { label: "Payments", icon: CreditCard, link: "/payments" },
+          ].map((item, i) => (
+            <Link
+              key={i}
+              href={item.link}
+              className="bg-white p-4 rounded-xl text-center"
+            >
+              <item.icon className="mx-auto mb-2 text-rose-500" />
+              {item.label}
+            </Link>
+          ))}
+        </div>
+
+        {/* ADDRESS SECTION */}
+        <div>
+          <div className="flex justify-between mb-4">
+            <h2 className="text-lg font-semibold">Saved Addresses</h2>
+
+            <Button onClick={() => setShowAddressModal(true)}>
+              + Add Address
+            </Button>
+          </div>
+
+          {addresses.length === 0 ? (
+            <p className="text-gray-500">No saved addresses</p>
+          ) : (
+            addresses.map((addr: any) => (
+              <div
+                key={addr.id}
+                className="bg-white p-4 rounded mb-3 flex justify-between items-start border"
+              >
+                <div className="space-y-1">
+                  <p className="font-medium">
+                    {addr.name || user?.firstName}
+                  </p>
+
+                  <p className="text-sm text-muted-foreground">
+                    {addr.phone || user?.phone}
+                  </p>
+
+                  <p className="text-sm text-gray-600">
+                    {addr.city}, {addr.state} - {addr.pincode}
+                  </p>
+
+                  {addr.landmark && (
+                    <p className="text-xs text-gray-500">
+                      {addr.landmark}
+                    </p>
+                  )}
+
+                  {addr.isDefault && (
+                    <span className="text-xs bg-green-100 text-green-600 px-2 py-1 rounded">
+                      Default
+                    </span>
+                  )}
+                </div>
+
+                <div className="flex gap-2">
+                  <button onClick={() => handleEditClick(addr)} className="cursor-pointer">
+                    <Pencil className="w-4 h-4 text-gray-500 " />
+                  </button>
+                  {/* <MapPin className="text-gray-400 w-5 h-5" /> */}
+                </div>
+              </div>
+            ))
+          )}
+        </div>
+      </div>
+
+      {/* EDIT PROFILE MODAL */}
+      {showEdit && (
+        <div className="fixed inset-0 bg-black/40 flex items-center justify-center z-50">
+          <div className="bg-white p-6 rounded-xl w-[400px] space-y-4">
+            <h2 className="text-lg font-semibold">Edit Profile</h2>
+
+            <input
+              value={editForm.firstName}
+              onChange={(e) =>
+                setEditForm({ ...editForm, firstName: e.target.value })
+              }
+              className="w-full border p-2"
+              placeholder="First Name"
+            />
+
+            <input
+              value={editForm.lastName}
+              onChange={(e) =>
+                setEditForm({ ...editForm, lastName: e.target.value })
+              }
+              className="w-full border p-2"
+              placeholder="Last Name"
+            />
+
+            <input
+              value={editForm.phone}
+              onChange={(e) =>
+                setEditForm({ ...editForm, phone: e.target.value })
+              }
+              className="w-full border p-2"
+              placeholder="Phone"
+            />
+
+            <div className="flex justify-end gap-2">
+              <Button variant="outline" onClick={() => setShowEdit(false)}>
+                Cancel
+              </Button>
+
+              <Button onClick={handleUpdateProfile}>
+                {updating ? "Saving..." : "Save"}
+              </Button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* ADD ADDRESS MODAL */}
+      {showAddressModal && (
+        <div className="fixed inset-0 bg-black/40 flex items-center justify-center z-50">
+          <div className="bg-white p-6 rounded-xl w-[400px] space-y-3">
+            <h2 className="text-lg font-semibold">Add Address</h2>
+
+            <input
+              placeholder="Full Name"
+              className="w-full border p-2"
+              value={addressForm.name}
+              onChange={(e) =>
+                setAddressForm({ ...addressForm, name: e.target.value })
+              }
+            />
+
+            <input
+              placeholder="Phone"
+              className="w-full border p-2"
+              value={addressForm.phone}
+              onChange={(e) =>
+                setAddressForm({ ...addressForm, phone: e.target.value })
+              }
+            />
+
+            <input
+              placeholder="City"
+              className="w-full border p-2"
+              value={addressForm.city}
+              onChange={(e) =>
+                setAddressForm({ ...addressForm, city: e.target.value })
+              }
+            />
+
+            <input
+              placeholder="State"
+              className="w-full border p-2"
+              value={addressForm.state}
+              onChange={(e) =>
+                setAddressForm({ ...addressForm, state: e.target.value })
+              }
+            />
+
+            <input
+              placeholder="Pincode"
+              className="w-full border p-2"
+              value={addressForm.pincode}
+              onChange={(e) =>
+                setAddressForm({ ...addressForm, pincode: e.target.value })
+              }
+            />
+
+            <input
+              placeholder="Landmark"
+              className="w-full border p-2"
+              value={addressForm.landmark}
+              onChange={(e) =>
+                setAddressForm({ ...addressForm, landmark: e.target.value })
+              }
+            />
+
+            <label className="flex items-center gap-2 text-sm">
+              <input
+                type="checkbox"
+                checked={addressForm.isDefault}
+                onChange={(e) =>
+                  setAddressForm({
+                    ...addressForm,
+                    isDefault: e.target.checked,
+                  })
+                }
+              />
+              Set as Default
+            </label>
+
+            <div className="flex justify-end gap-2">
+              <Button
+                variant="outline"
+                onClick={() => setShowAddressModal(false)}
+              >
+                Cancel
+              </Button>
+
+              <Button onClick={handleAddAddress}>
+                {addingAddress ? "Adding..." : "Add Address"}
+              </Button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {showEditAddressModal && (
+        <div className="fixed inset-0 bg-black/40 flex items-center justify-center z-50">
+          <div className="bg-white p-6 rounded-xl w-[400px] space-y-3">
+            <h2 className="text-lg font-semibold">Edit Address</h2>
+
+            <input
+              placeholder="Full Name"
+              className="w-full border p-2"
+              value={addressForm.name}
+              onChange={(e) =>
+                setAddressForm({ ...addressForm, name: e.target.value })
+              }
+            />
+
+            <input
+              placeholder="Phone"
+              className="w-full border p-2"
+              value={addressForm.phone}
+              onChange={(e) =>
+                setAddressForm({ ...addressForm, phone: e.target.value })
+              }
+            />
+
+            <input
+              placeholder="City"
+              className="w-full border p-2"
+              value={addressForm.city}
+              onChange={(e) =>
+                setAddressForm({ ...addressForm, city: e.target.value })
+              }
+            />
+
+            <input
+              placeholder="State"
+              className="w-full border p-2"
+              value={addressForm.state}
+              onChange={(e) =>
+                setAddressForm({ ...addressForm, state: e.target.value })
+              }
+            />
+
+            <input
+              placeholder="Pincode"
+              className="w-full border p-2"
+              value={addressForm.pincode}
+              onChange={(e) =>
+                setAddressForm({ ...addressForm, pincode: e.target.value })
+              }
+            />
+
+            <input
+              placeholder="Landmark"
+              className="w-full border p-2"
+              value={addressForm.landmark}
+              onChange={(e) =>
+                setAddressForm({ ...addressForm, landmark: e.target.value })
+              }
+            />
+
+            <label className="flex items-center gap-2 text-sm">
+              <input
+                type="checkbox"
+                checked={addressForm.isDefault}
+                onChange={(e) =>
+                  setAddressForm({
+                    ...addressForm,
+                    isDefault: e.target.checked,
+                  })
+                }
+              />
+              Set as Default
+            </label>
+
+            <div className="flex justify-end gap-2">
+              <Button
+                variant="outline"
+                onClick={() => setShowEditAddressModal(false)}
+              >
+                Cancel
+              </Button>
+
+              <Button onClick={handleUpdateAddress}>
+                {editingAddress ? "Updating..." : "Update Address"}
+              </Button>
+            </div>
+          </div>
+        </div>
+      )}
+    </div>
+  );
 }

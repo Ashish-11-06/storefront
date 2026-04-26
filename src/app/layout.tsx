@@ -2,6 +2,8 @@ import type { Metadata } from "next";
 import { Geist, Geist_Mono, Inter } from "next/font/google";
 import "./globals.css";
 import ThemeProvider from "@/components/theme/ThemeProvider";
+import Providers from "./providers";
+import { Toaster } from "sonner"; // 🔥 ADD THIS
 
 const geistSans = Geist({
   variable: "--font-geist-sans",
@@ -41,9 +43,28 @@ export default function RootLayout({
       `}
       suppressHydrationWarning={true}
     >
-      {/* ✅ Let CSS control fonts */}
       <body className="min-h-full flex flex-col">
-        <ThemeProvider>{children}</ThemeProvider>
+
+        {/* ✅ Apollo Provider */}
+        <Providers>
+
+          {/* ✅ Theme */}
+          <ThemeProvider>
+
+            {children}
+
+            <Toaster
+              position="top-left"
+              richColors
+              closeButton
+              duration={2000}
+               offset={{ top: 80}}
+            />
+
+          </ThemeProvider>
+
+        </Providers>
+
       </body>
     </html>
   );

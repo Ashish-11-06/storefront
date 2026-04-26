@@ -11,7 +11,7 @@ export default function ThemeProvider({
   useEffect(() => {
     const loadTheme = async () => {
       try {
-        const res = await fetch("/api/theme"); // change to your backend URL
+        const res = await fetch("/api/theme"); 
         const data = await res.json();
 
         applyTheme(data);
