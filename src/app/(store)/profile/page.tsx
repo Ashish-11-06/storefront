@@ -261,7 +261,7 @@ export default function ProfilePage() {
             { label: "Orders", icon: ShoppingBag, link: "/orders" },
             { label: "Wishlist", icon: Heart, link: "/wishlist" },
             { label: "Cart", icon: ShoppingCart, link: "/cart" },
-            { label: "Payments", icon: CreditCard, link: "/payments" },
+            // { label: "Payments", icon: CreditCard, link: "/payments" },
           ].map((item, i) => (
             <Link
               key={i}

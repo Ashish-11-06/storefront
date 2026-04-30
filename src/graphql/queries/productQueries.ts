@@ -27,6 +27,12 @@ export const GET_PRODUCTS = gql`
         images {
           image
         }
+        stock {
+          quantity
+          reservedQuantity
+          availableQuantity
+          isOutOfStock
+        }
       }
       categories {
         id
@@ -60,6 +66,12 @@ export const GET_PRODUCT_BY_ID = gql`
         category {
           id
           name
+        }
+        stock {
+          quantity
+          reservedQuantity
+          availableQuantity
+          isOutOfStock
         }
       }
     }

@@ -1,7 +1,7 @@
 "use client";
 
 import Link from "next/link";
-import { ShoppingCart, User, X } from "lucide-react";
+import { ShoppingCart, User, X, Search } from "lucide-react";
 import { useState, useRef, useEffect } from "react";
 import { useQuery } from "@apollo/client/react";
 import { GET_CART } from "@/graphql/queries/cartQueries";
@@ -9,7 +9,6 @@ import { GET_PRODUCTS } from "@/graphql/queries/productQueries";
 import { useRouter } from "next/navigation";
 import Image from "next/image";
 import { Skeleton } from "@/components/ui/skeleton";
-import { Search } from "lucide-react";
 import { toast } from "sonner";
 
 export default function Header() {
@@ -17,32 +16,89 @@ export default function Header() {
   const [search, setSearch] = useState("");
   const [showDropdown, setShowDropdown] = useState(false);
   const [isLoggedIn, setIsLoggedIn] = useState<boolean | null>(null);
+  const [debouncedSearch, setDebouncedSearch] = useState("");
+
+  // 🔥 NEW → live cart count
+  const [liveCartCount, setLiveCartCount] = useState(0);
 
   const dropdownRef = useRef<HTMLDivElement>(null);
   const router = useRouter();
 
   const BASE_URL = `${process.env.NEXT_PUBLIC_API_URL}/media/`;
   const PLACEHOLDER = "https://via.placeholder.com/50";
-  const [debouncedSearch, setDebouncedSearch] = useState("");
-  // 🔥 AUTH CHECK
+
+  // 🔐 Auth check
   useEffect(() => {
     const loggedIn = localStorage.getItem("isLoggedIn") === "true";
     setIsLoggedIn(loggedIn);
   }, []);
 
+  // 🔎 debounce search
   useEffect(() => {
     const handler = setTimeout(() => {
       setDebouncedSearch(search);
-    }, 700); // ⏱ 0.7 seconds
-
+    }, 700);
     return () => clearTimeout(handler);
   }, [search]);
 
-  // 🛒 Cart
+  // 🛒 GraphQL cart (fallback)
   const { data: cartData } = useQuery(GET_CART);
   const cartCount = cartData?.myCart?.items?.length || 0;
 
-  // 🔍 Search
+  // 🔥 FINAL count (WS > GraphQL)
+  const finalCartCount = liveCartCount || cartCount;
+
+  const WS_URL =
+  process.env.NEXT_PUBLIC_WS_URL || "ws://localhost:8000";
+
+  // WebSocket connection
+  useEffect(() => {
+    if (typeof window === "undefined") return;
+
+    const token = localStorage.getItem("token");
+    if (!token) return;
+
+    let socket: WebSocket | null = null;
+
+    const connect = () => {
+      socket = new WebSocket(`${WS_URL}/ws/cart/?token=${token}`);
+
+      socket.onopen = () => console.log("🟢 WS CONNECTED");
+
+      socket.onmessage = (event) => {
+        try {
+          const data = JSON.parse(event.data);
+          console.log("WS DATA:", data);
+
+          // ✅ FIXED
+          if (data.cart_count !== undefined) {
+            setLiveCartCount(data.cart_count);
+          }
+        } catch (err) {
+          console.log("WS parse error", err);
+        }
+      };
+
+      socket.onerror = (err) => console.log("🔴 WS ERROR", err);
+
+      socket.onclose = () => {
+        console.log("⚫ WS CLOSED");
+
+        // 🔁 auto reconnect
+        setTimeout(() => {
+          connect();
+        }, 2000);
+      };
+    };
+
+    connect();
+
+    return () => {
+      socket?.close();
+    };
+  }, []);
+
+  // 🔍 Search query
   const { data: searchData, loading: searchLoading } = useQuery(GET_PRODUCTS, {
     variables: { search: debouncedSearch, first: 5 },
     skip: debouncedSearch.length < 1,
@@ -60,7 +116,7 @@ export default function Header() {
 
   const results = [...products, ...categoryAsProducts];
 
-  // 🔥 LOGOUT FUNCTION
+  // 🔥 Logout
   const handleLogout = () => {
     localStorage.removeItem("token");
     localStorage.removeItem("isLoggedIn");
@@ -68,15 +124,14 @@ export default function Header() {
     setIsLoggedIn(false);
     setOpen(false);
 
-    // ✅ Toast
     toast.success("Logged out successfully!");
 
-    // 👉 small delay for UX
     setTimeout(() => {
       router.push("/login");
     }, 1000);
   };
-  // Close search dropdown
+
+  // click outside search
   useEffect(() => {
     function handleClickOutside(event: MouseEvent) {
       if (
@@ -91,7 +146,7 @@ export default function Header() {
     return () => document.removeEventListener("click", handleClickOutside);
   }, []);
 
-  // 🔍 SEARCH CLICK
+  // search click
   const handleClick = (item: any) => {
     if (item.isCategory) {
       const categoryId = item.id.replace("cat-", "");
@@ -105,7 +160,7 @@ export default function Header() {
     setShowDropdown(false);
   };
 
-  // Hover dropdown
+  // hover dropdown
   const timeoutRef = useRef<NodeJS.Timeout | null>(null);
 
   const handleMouseEnter = () => {
@@ -121,19 +176,18 @@ export default function Header() {
     <header className="border-b bg-background sticky top-0 z-50">
       <div className="max-w-7xl mx-auto px-6 py-3">
         <div className="flex items-center justify-between gap-6">
-
           {/* Logo */}
-          <Link href="/" className="text-3xl font-semibold font-serif tracking-wide bg-gradient-to-r from-pink-500 via-rose-500 to-red-600 bg-clip-text text-transparent">
+          <Link
+            href="/"
+            className="text-3xl font-semibold font-serif tracking-wide bg-gradient-to-r from-pink-500 via-rose-500 to-red-600 bg-clip-text text-transparent"
+          >
             Rajesh Florals
           </Link>
 
           {/* SEARCH */}
           <div className="relative flex-1 max-w-xl" ref={dropdownRef}>
-
-            {/* 🔍 SEARCH ICON */}
-           
             <Search className="absolute left-4 top-1/2 -translate-y-1/2 h-4 w-4 text-gray-400" />
-            
+
             <input
               type="text"
               placeholder="Search flowers..."
@@ -158,10 +212,10 @@ export default function Header() {
               </button>
             )}
 
-            {/* DROPDOWN (unchanged) */}
+            {/* DROPDOWN */}
             {showDropdown && (
               <div className="absolute top-full mt-2 w-full bg-white border rounded-xl shadow-lg z-50">
-                {searchLoading ? (
+                {search !== debouncedSearch || searchLoading ? (
                   <div className="p-2 space-y-2">
                     {Array.from({ length: 5 }).map((_, i) => (
                       <div key={i} className="flex gap-3 px-3 py-2">
@@ -208,7 +262,6 @@ export default function Header() {
 
           {/* NAV */}
           <nav className="hidden md:flex items-center gap-8 text-sm font-medium">
-            {/* <Link href="/">HOME</Link> */}
             <Link href="/products">PRODUCTS</Link>
             <Link href="/about">ABOUT</Link>
             <Link href="/contact">CONTACT</Link>
@@ -216,8 +269,7 @@ export default function Header() {
 
           {/* RIGHT */}
           <div className="flex items-center gap-5">
-
-            {/* 🔥 AUTH UI */}
+            {/* AUTH */}
             {isLoggedIn === null ? null : isLoggedIn ? (
               <div
                 className="relative"
@@ -228,13 +280,22 @@ export default function Header() {
 
                 {open && (
                   <div className="absolute right-0 mt-3 w-40 bg-card border rounded-lg shadow-md py-2 z-50">
-                    <Link href="/profile" className="block px-4 py-2 hover:bg-muted">
+                    <Link
+                      href="/profile"
+                      className="block px-4 py-2 hover:bg-muted"
+                    >
                       Profile
                     </Link>
-                    <Link href="/wishlist" className="block px-4 py-2 hover:bg-muted">
+                    <Link
+                      href="/wishlist"
+                      className="block px-4 py-2 hover:bg-muted"
+                    >
                       Wishlist
                     </Link>
-                    <Link href="/orders" className="block px-4 py-2 hover:bg-muted">
+                    <Link
+                      href="/orders"
+                      className="block px-4 py-2 hover:bg-muted"
+                    >
                       Orders
                     </Link>
                     <button
@@ -252,16 +313,16 @@ export default function Header() {
               </Link>
             )}
 
-            {/* CART */}
+            {/* 🛒 CART */}
             <Link href="/cart" className="relative">
               <ShoppingCart className="h-5 w-5" />
-              {cartCount > 0 && (
+
+              {finalCartCount > 0 && (
                 <span className="absolute -top-2 -right-2 bg-primary text-white text-[10px] rounded-full h-5 w-5 flex items-center justify-center">
-                  {cartCount}
+                  {finalCartCount}
                 </span>
               )}
             </Link>
-
           </div>
         </div>
       </div>

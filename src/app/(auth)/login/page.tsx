@@ -5,11 +5,14 @@ import Link from "next/link";
 import { useState } from "react";
 import { useMutation } from "@apollo/client/react";
 import { LOGIN_USER } from "@/graphql/queries/authQueries";
-import { useRouter } from "next/navigation";
+import { useRouter, useSearchParams } from "next/navigation";
 import { toast } from "sonner";
+
 export default function LoginPage() {
   const router = useRouter();
+  const searchParams = useSearchParams();
 
+  const redirect = searchParams.get("redirect") || "/";
   const [form, setForm] = useState({
     email: "",
     password: "",
@@ -41,7 +44,7 @@ export default function LoginPage() {
         toast.success("Welcome back!");
 
         setTimeout(() => {
-          router.push("/");
+          router.push(redirect);
         }, 800);
       } else {
         toast.error("Invalid email or password");

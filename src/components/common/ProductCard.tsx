@@ -10,7 +10,7 @@ import {
   REMOVE_FROM_WISHLIST,
 } from "@/graphql/queries/wishlistQueries";
 import { ADD_TO_CART } from "@/graphql/queries/cartQueries";
-import { GET_STOCK } from "@/graphql/queries/productQueries";
+// import { GET_STOCK } from "@/graphql/queries/productQueries";
 import { useQuery } from "@apollo/client/react";
 import { useRouter } from "next/navigation";
 import { toast } from "sonner";
@@ -18,7 +18,7 @@ import { toast } from "sonner";
 interface Props {
   product: any;
 }
-
+import { ShoppingBag } from "lucide-react";
 export default function ProductCard({ product }: Props) {
   const BASE_URL = `${process.env.NEXT_PUBLIC_API_URL}/media/`;
   const router = useRouter();
@@ -37,9 +37,9 @@ export default function ProductCard({ product }: Props) {
   /* ================= PRICE ================= */
   const price = Number(product.price || 0);
   const discountPrice = Number(product.discountPrice || product.price || 0);
-  const { data: stockData, loading: stockLoading } = useQuery(GET_STOCK, {
-    variables: { productId: Number(product.id) },
-  });
+  // const { data: stockData, loading: stockLoading } = useQuery(GET_STOCK, {
+  //   variables: { productId: Number(product.id) },
+  // });
   /* ================= CATEGORY ================= */
   const categoryName = product.category?.name || "General";
 
@@ -51,12 +51,10 @@ export default function ProductCard({ product }: Props) {
 
   /* ================= STATE ================= */
   const [isWishlisted, setIsWishlisted] = useState(
-    product.isWishlisted || false
+    product.isWishlisted || false,
   );
 
-  const [isInCart, setIsInCart] = useState(
-    product.isAddedcart || false
-  );
+  const [isInCart, setIsInCart] = useState(product.isAddedcart || false);
 
   const [quantity, setQuantity] = useState(1);
 
@@ -69,8 +67,9 @@ export default function ProductCard({ product }: Props) {
   const [addToWishlist] = useMutation(ADD_TO_WISHLIST);
   const [removeFromWishlist] = useMutation(REMOVE_FROM_WISHLIST);
   const [addToCart] = useMutation(ADD_TO_CART);
-  const availableStock = stockData?.stock?.availableQuantity ?? 0;
-  const isOutOfStock = availableStock === 0;
+  // const availableStock = stockData?.stock?.availableQuantity ?? 0;
+  const availableStock = product?.stock?.availableQuantity ?? 0;
+  const isOutOfStock = product?.stock?.isOutOfStock || availableStock === 0;
   /* ================= HANDLERS ================= */
 
   const handleWishlistToggle = async () => {
@@ -82,7 +81,6 @@ export default function ProductCard({ product }: Props) {
 
         setIsWishlisted(false);
         toast.success("Removed from wishlist!");
-
       } else {
         await addToWishlist({
           variables: { productId: Number(product.id) },
@@ -91,7 +89,6 @@ export default function ProductCard({ product }: Props) {
         setIsWishlisted(true);
         toast.success("Added to wishlist!");
       }
-
     } catch (err: any) {
       toast.error(err.message || "Wishlist update failed");
     }
@@ -107,11 +104,25 @@ export default function ProductCard({ product }: Props) {
       });
 
       setIsInCart(true);
-
       toast.success("Added to cart!");
-
     } catch (err: any) {
-      toast.error(err.message || "Failed to add to cart");
+      console.log(err);
+
+      // 🔥 Extract GraphQL error message
+      const message =
+        err?.graphQLErrors?.[0]?.message ||
+        err?.message ||
+        "Something went wrong";
+
+      if (message === "Login required") {
+        toast.error("Please login to continue");
+
+        // 👉 optional: redirect to login
+        router.push(`/login?redirect=/cart`);
+        return;
+      }
+
+      toast.error(message);
     }
   };
 
@@ -128,17 +139,15 @@ export default function ProductCard({ product }: Props) {
 
   return (
     <div className="group relative rounded-lg bg-card border border-border shadow-sm overflow-hidden hover:shadow-md transition">
-
       {/* ❤️ Wishlist */}
       <button
         onClick={handleWishlistToggle}
         className="absolute top-3 right-3 z-10 p-2 rounded-full bg-background/80 backdrop-blur cursor-pointer"
       >
         <Heart
-          className={`w-5 h-5 ${isWishlisted
-            ? "fill-red-500 text-red-500"
-            : "text-muted-foreground"
-            }`}
+          className={`w-5 h-5 ${
+            isWishlisted ? "fill-red-500 text-red-500" : "text-muted-foreground"
+          }`}
         />
       </button>
 
@@ -151,23 +160,16 @@ export default function ProductCard({ product }: Props) {
             className="w-full h-56 object-cover"
           />
 
-          <div className="p-4 space-y-1">
-
+          <div className="px-4 py-2 space-y-1">
             {/* Category */}
-            <p className="text-xs text-primary font-medium">
-              {categoryName}
-            </p>
+            <p className="text-xs text-primary font-medium">{categoryName}</p>
 
             {/* Name */}
-            <h2 className="font-medium text-foreground">
-              {product.name}
-            </h2>
+            <h2 className="font-medium text-foreground">{product.name}</h2>
 
             {/* Unit */}
             {unitText && (
-              <p className="text-xs text-muted-foreground">
-                {unitText}
-              </p>
+              <p className="text-xs text-muted-foreground">{unitText}</p>
             )}
 
             {/* Price */}
@@ -182,44 +184,32 @@ export default function ProductCard({ product }: Props) {
                 </span>
               )}
             </div>
-
           </div>
         </div>
       </Link>
 
       {/* CTA */}
-      <div className="p-4 space-y-3">
-
-        {/* Quantity */}
-        <div className="flex justify-start">
-          <div className="flex items-center border rounded-full overflow-hidden">
-            <button
-              onClick={() => setQuantity((q) => Math.max(1, q - 1))}
-              className="px-3 py-1 hover:bg-muted cursor-pointer"
-            >
-              −
-            </button>
-
-            <span className="px-3 text-sm">{quantity}</span>
-
-            <button
-              onClick={() => setQuantity((q) => q + 1)}
-              className="px-3 py-1 hover:bg-muted cursor-pointer"
-            >
-              +
-            </button>
-          </div>
+      <div className="px-4 pb-4 pt-2 space-y-1">
+        <div className="px-2 pb-3">
+          <p
+            className={`text-sm font-medium ${
+              isOutOfStock ? "text-red-500" : "text-green-600"
+            }`}
+          >
+            {isOutOfStock
+              ? "Unavailable"
+              : `${availableStock} items available`}
+          </p>
         </div>
-
         {/* Buttons */}
         <div className="flex gap-2">
-
           {isOutOfStock ? (
             <Button
-              disabled
-              className="w-full bg-gray-400 cursor-not-allowed"
+              aria-disabled
+              className="w-full bg-gray-400 text-white opacity-70 cursor-not-allowed"
+              onClick={(e) => e.preventDefault()}
             >
-              Out of Stock
+              Unavailable
             </Button>
           ) : (
             <>
@@ -251,12 +241,11 @@ export default function ProductCard({ product }: Props) {
                 variant="outline"
                 className="flex-1 border-primary text-primary hover:bg-primary hover:text-white"
               >
-                <Zap className="w-4 h-4 mr-1" />
-                Buy
+                <ShoppingBag className="w-4 h-4 mr-1" />
+                Buy Now
               </Button>
             </>
           )}
-
         </div>
       </div>
     </div>

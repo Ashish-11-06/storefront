@@ -6,6 +6,7 @@ export const CREATE_ORDER = gql`
     $customerPhone: String!
     $customerEmail: String!
     $shippingAddress: String!
+    $paymentMethod: String!
     $items: [OrderItemInput!]!
   ) {
     createCustomerOrder(
@@ -13,6 +14,7 @@ export const CREATE_ORDER = gql`
       customerPhone: $customerPhone
       customerEmail: $customerEmail
       shippingAddress: $shippingAddress
+      paymentMethod: $paymentMethod
       items: $items
     ) {
       order {
@@ -108,6 +110,32 @@ export const GET_ORDER_BY_ID = gql`
           }
         }
       }
+    }
+  }
+`;
+
+export const CREATE_RAZORPAY_ORDER = gql`
+  mutation CreateRazorpayOrder($orderId: Int!) {
+    createRazorpayOrder(orderId: $orderId) {
+      razorpayOrderId
+      amount
+      key
+    }
+  }
+`;
+
+export const VERIFY_PAYMENT = gql`
+  mutation VerifyPayment(
+    $razorpayOrderId: String!
+    $razorpayPaymentId: String!
+    $razorpaySignature: String!
+  ) {
+    verifyPayment(
+      razorpayOrderId: $razorpayOrderId
+      razorpayPaymentId: $razorpayPaymentId
+      razorpaySignature: $razorpaySignature
+    ) {
+      success
     }
   }
 `;

@@ -21,23 +21,23 @@ export const GET_FILTERED_PRODUCTS = gql`
         price
         discountPrice
         isFeatured
-
-        # ✅ REQUIRED FOR CARD LOGIC
         isWishlisted
         isAddedcart
-
-        # ✅ REQUIRED FOR UI
         unit
         measureValue
-
         category {
           id
           name
           image
         }
-
         images {
           image
+        }
+        stock {
+          quantity
+          reservedQuantity
+          availableQuantity
+          isOutOfStock
         }
       }
 

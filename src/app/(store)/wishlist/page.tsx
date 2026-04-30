@@ -10,14 +10,15 @@ import {
 import { ADD_TO_CART } from "@/graphql/queries/cartQueries";
 import { Skeleton } from "@/components/ui/skeleton";
 import { toast } from "sonner";
-
+import { useRouter } from "next/navigation";
 export default function WishlistPage() {
   const BASE_URL = `${process.env.NEXT_PUBLIC_API_URL}/media/`;
 
+  const router = useRouter();
   const { data, loading, error, refetch } = useQuery(GET_WISHLIST, {
-  fetchPolicy: "network-only",        
-  nextFetchPolicy: "network-only",  
-});
+    fetchPolicy: "network-only",
+    nextFetchPolicy: "network-only",
+  });
 
   const [removeFromWishlist] = useMutation(REMOVE_FROM_WISHLIST);
   const [addToCart] = useMutation(ADD_TO_CART);
@@ -32,6 +33,7 @@ export default function WishlistPage() {
         wishlistId: item.id,
         name: item.product.name,
         price: Number(item.product.price),
+        isInCart: item.product.isAddedcart,
         image: firstImage
           ? firstImage.startsWith("http")
             ? firstImage
@@ -42,88 +44,79 @@ export default function WishlistPage() {
 
   // ❌ Remove
   const handleRemove = async (productId: number) => {
-  try {
-    await removeFromWishlist({
-      variables: { productId },
-    });
+    try {
+      await removeFromWishlist({
+        variables: { productId },
+      });
 
-    refetch();
+      refetch();
 
-    toast.success("Removed from wishlist!");
-
-  } catch (err: any) {
-    toast.error(err.message || "Failed to remove");
-  }
-};
+      toast.success("Removed from wishlist!");
+    } catch (err: any) {
+      toast.error(err.message || "Failed to remove");
+    }
+  };
 
   // 🛒 Add to cart
   const handleAddToCart = async (productId: number) => {
-  try {
-    await addToCart({
-      variables: {
-        productId,
-        quantity: 1,
-      },
-    });
+    try {
+      await addToCart({
+        variables: {
+          productId,
+          quantity: 1,
+        },
+      });
 
-    toast.success("Added to cart!");
-
-  } catch (err: any) {
-    toast.error(err.message || "Failed to add to cart");
-  }
-};
+      toast.success("Added to cart!");
+    } catch (err: any) {
+      toast.error(err.message || "Failed to add to cart");
+    }
+  };
 
   // 🔄 States
   if (loading) {
-  return (
-    <div className="bg-background min-h-screen py-14">
-      <div className="max-w-7xl mx-auto px-6">
+    return (
+      <div className="bg-background min-h-screen py-14">
+        <div className="max-w-7xl mx-auto px-6">
+          {/* HEADER */}
+          <div className="flex items-center gap-4 mb-10">
+            <Skeleton className="h-8 w-48" />
+            <Skeleton className="w-12 h-[1px]" />
+          </div>
 
-        {/* HEADER */}
-        <div className="flex items-center gap-4 mb-10">
-          <Skeleton className="h-8 w-48" />
-          <Skeleton className="w-12 h-[1px]" />
-        </div>
+          <div className="space-y-6">
+            {Array.from({ length: 4 }).map((_, i) => (
+              <div
+                key={i}
+                className="flex items-center justify-between border-b border-border pb-6"
+              >
+                {/* LEFT */}
+                <div className="flex items-center gap-5">
+                  {/* Image */}
+                  <Skeleton className="w-20 h-20 rounded-md" />
 
-        <div className="space-y-6">
-
-          {Array.from({ length: 4 }).map((_, i) => (
-            <div
-              key={i}
-              className="flex items-center justify-between border-b border-border pb-6"
-            >
-              {/* LEFT */}
-              <div className="flex items-center gap-5">
-
-                {/* Image */}
-                <Skeleton className="w-20 h-20 rounded-md" />
-
-                {/* Info */}
-                <div className="space-y-2">
-                  <Skeleton className="h-4 w-44" />
-                  <Skeleton className="h-3 w-20" />
+                  {/* Info */}
+                  <div className="space-y-2">
+                    <Skeleton className="h-4 w-44" />
+                    <Skeleton className="h-3 w-20" />
+                  </div>
                 </div>
 
+                {/* RIGHT */}
+                <div className="flex items-center gap-4">
+                  {/* Button */}
+                  <Skeleton className="h-10 w-32 rounded-full" />
+
+                  {/* Delete icon */}
+                  <Skeleton className="w-5 h-5 rounded-full" />
+                </div>
               </div>
-
-              {/* RIGHT */}
-              <div className="flex items-center gap-4">
-
-                {/* Button */}
-                <Skeleton className="h-10 w-32 rounded-full" />
-
-                {/* Delete icon */}
-                <Skeleton className="w-5 h-5 rounded-full" />
-
-              </div>
-            </div>
-          ))}
-
+            ))}
+          </div>
         </div>
       </div>
-    </div>
-  );
-}
+    );
+  }
 
   if (error) {
     return (
@@ -136,7 +129,6 @@ export default function WishlistPage() {
   return (
     <div className="bg-background min-h-screen py-14">
       <div className="max-w-7xl mx-auto px-6">
-
         {/* HEADER */}
         <div className="flex items-center gap-4 mb-10">
           <h1 className="text-xl lg:text-3xl font-heading text-foreground tracking-wide">
@@ -151,7 +143,6 @@ export default function WishlistPage() {
           </p>
         ) : (
           <div className="space-y-6">
-
             {items.map((item: any) => (
               <div
                 key={item.id}
@@ -159,7 +150,6 @@ export default function WishlistPage() {
               >
                 {/* LEFT */}
                 <div className="flex items-center gap-5">
-
                   {/* Image */}
                   <img
                     src={item.image}
@@ -169,27 +159,40 @@ export default function WishlistPage() {
 
                   {/* Info */}
                   <div>
-                    <h2 className="text-foreground font-medium">
-                      {item.name}
-                    </h2>
+                    <h2 className="text-foreground font-medium">{item.name}</h2>
 
                     <div className="flex items-center gap-3 mt-1 text-sm text-muted-foreground">
                       <span>₹{item.price}</span>
                     </div>
                   </div>
-
                 </div>
 
                 {/* RIGHT */}
                 <div className="flex items-center gap-4">
-
                   {/* 🛒 Add to Cart */}
                   <Button
-                    onClick={() => handleAddToCart(Number(item.id))}
-                    className="rounded-full px-4 py-2 flex items-center gap-2"
+                    onClick={() => {
+                      if (item.isInCart) {
+                        router.push("/cart");
+                      } else {
+                        handleAddToCart(Number(item.id)); // product id
+                      }
+                    }}
+                    className={`flex-1 rounded-full px-4 py-2 flex items-center justify-center gap-2 ${
+                      item.isInCart ? "bg-green-600 hover:bg-green-600" : ""
+                    }`}
                   >
-                    <ShoppingCart className="w-4 h-4" />
-                    Add to Cart
+                    {item.isInCart ? (
+                      <>
+                        <ShoppingCart className="w-4 h-4 mr-1" />
+                        Go to Cart
+                      </>
+                    ) : (
+                      <>
+                        <ShoppingCart className="w-4 h-4 mr-1" />
+                        Add to Cart
+                      </>
+                    )}
                   </Button>
 
                   {/* ❌ Remove */}
@@ -199,12 +202,9 @@ export default function WishlistPage() {
                   >
                     <Trash2 className="w-5 h-5" />
                   </button>
-
                 </div>
-
               </div>
             ))}
-
           </div>
         )}
       </div>

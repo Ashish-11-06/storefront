@@ -8,6 +8,7 @@ export const GET_WISHLIST = gql`
         id
         name
         price
+        isAddedcart
         images {
           image
         }

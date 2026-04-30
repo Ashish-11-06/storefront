@@ -6,6 +6,7 @@ import { GET_CART } from "@/graphql/queries/cartQueries";
 import { CREATE_ORDER } from "@/graphql/queries/orderQueries";
 import { GET_PROFILE } from "@/graphql/queries/profileQueries";
 import { GET_PRODUCTS } from "@/graphql/queries/productQueries";
+import { CREATE_RAZORPAY_ORDER, VERIFY_PAYMENT } from "@/graphql/queries/orderQueries"
 import { Button } from "@/components/ui/button";
 import { useSearchParams } from "next/navigation";
 import { User, Phone, Mail, MapPin, Pencil } from "lucide-react";
@@ -52,6 +53,19 @@ export default function OrderSummaryPage() {
 
   const isBuyNow = !!parsedProductId && parsedCart.length === 0;
   const isCartCheckout = parsedCart.length > 0;
+
+  const loadRazorpay = () => {
+    return new Promise((resolve) => {
+      const script = document.createElement("script");
+      script.src = "https://checkout.razorpay.com/v1/checkout.js";
+      script.onload = () => resolve(true);
+      script.onerror = () => resolve(false);
+      document.body.appendChild(script);
+    });
+  };
+
+  const [createRazorpayOrder] = useMutation(CREATE_RAZORPAY_ORDER);
+  const [verifyPayment] = useMutation(VERIFY_PAYMENT);
 
   /* ================= QUERIES ================= */
 
@@ -177,47 +191,114 @@ export default function OrderSummaryPage() {
   const [createOrder, { loading }] = useMutation(CREATE_ORDER);
 
   const handlePlaceOrder = async () => {
-  // ✅ Basic validation
-  if (!form.name || !form.phone || !form.address) {
-    toast.error("Please fill all required details");
-    return;
-  }
-
-  if (!orderItems.length) {
-    toast.error("No items to order 🛒");
-    return;
-  }
-
-  try {
-    const res = await createOrder({
-      variables: {
-        customerName: form.name,
-        customerPhone: form.phone,
-        customerEmail: form.email,
-        shippingAddress: form.address,
-        paymentMethod: form.payment,
-        items: orderItems,
-      },
-    });
-
-    const order = res.data?.createCustomerOrder?.order;
-
-    if (order) {
-      toast.success(`Order placed successfully (#${order.orderNumber})`);
-
-      // 👉 optional redirect
-      setTimeout(() => {
-        window.location.href = "/orders";
-      }, 1200);
-
-    } else {
-      toast.error("Failed to place order");
+    if (!form.name || !form.phone || !form.address) {
+      toast.error("Please fill all required details");
+      return;
     }
 
-  } catch (err: any) {
-    toast.error(err.message || "Something went wrong");
-  }
-};
+    if (!orderItems.length) {
+      toast.error("No items to order 🛒");
+      return;
+    }
+
+    try {
+      // ✅ STEP 1: Create Order
+      const res = await createOrder({
+        variables: {
+          customerName: form.name,
+          customerPhone: form.phone,
+          customerEmail: form.email,
+          shippingAddress: form.address,
+          paymentMethod: form.payment,
+          items: orderItems,
+        },
+      });
+
+      const order = res.data?.createCustomerOrder?.order;
+
+      if (!order) {
+        toast.error("Order creation failed");
+        return;
+      }
+
+      // ============================
+      // 💰 ONLINE PAYMENT FLOW
+      // ============================
+      if (form.payment === "ONLINE") {
+        const scriptLoaded = await loadRazorpay();
+
+        if (!scriptLoaded) {
+          toast.error("Razorpay SDK failed to load");
+          return;
+        }
+
+        // ✅ STEP 2: Create Razorpay Order
+        const razorRes = await createRazorpayOrder({
+          variables: { orderId: Number(order.id) },
+        });
+
+        const razorData = razorRes.data.createRazorpayOrder;
+
+        const options = {
+          key: razorData.key,
+          amount: razorData.amount,
+          currency: "INR",
+          name: "Your Store",
+          description: `Order #${order.orderNumber}`,
+          order_id: razorData.razorpayOrderId,
+
+          handler: async function (response) {
+            try {
+              // ✅ STEP 3: VERIFY PAYMENT
+              const verifyRes = await verifyPayment({
+                variables: {
+                  razorpayOrderId: response.razorpay_order_id,
+                  razorpayPaymentId: response.razorpay_payment_id,
+                  razorpaySignature: response.razorpay_signature,
+                },
+              });
+
+              if (verifyRes.data.verifyPayment.success) {
+                toast.success("Payment successful 🎉");
+
+                window.location.href = "/orders";
+              } else {
+                toast.error("Payment verification failed");
+              }
+            } catch (err) {
+              toast.error("Verification error");
+            }
+          },
+
+          prefill: {
+            name: form.name,
+            email: form.email,
+            contact: form.phone,
+          },
+
+          theme: {
+            color: "#6366f1",
+          },
+        };
+
+        const rzp = new window.Razorpay(options);
+        rzp.open();
+
+      } else {
+        // ============================
+        // 💵 COD FLOW
+        // ============================
+        toast.success(`Order placed (#${order.orderNumber})`);
+
+        setTimeout(() => {
+          window.location.href = "/orders";
+        }, 1200);
+      }
+
+    } catch (err) {
+      toast.error("Something went wrong");
+    }
+  };
 
   const originalTotal = useMemo(() => {
     if (isCartCheckout) {
@@ -395,7 +476,7 @@ export default function OrderSummaryPage() {
         </div>
 
         {/* ================= SUMMARY ================= */}
-       <div className="bg-card border p-6 rounded-xl flex flex-col h-fit">
+        <div className="bg-card border p-6 rounded-xl flex flex-col h-fit">
           <h2 className="text-xl font-heading mb-4">Order Summary</h2>
 
           {/* ITEMS */}

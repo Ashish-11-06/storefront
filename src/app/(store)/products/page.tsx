@@ -27,7 +27,10 @@ export default function ProductsPage() {
   // 🔥 1. Sync URL → state
   useEffect(() => {
     if (categoryFromUrl) {
-      setSelectedCategories([Number(categoryFromUrl)]);
+      const ids = categoryFromUrl.split(",").map(Number);
+      setSelectedCategories(ids);
+    } else {
+      setSelectedCategories([]);
     }
   }, [categoryFromUrl]);
 
@@ -36,7 +39,7 @@ export default function ProductsPage() {
     setSelectedCategories(selected);
 
     if (selected.length > 0) {
-      router.push(`/products?category=${selected[0]}`);
+      router.push(`/products?category=${selected.join(",")}`);
     } else {
       router.push(`/products`);
     }
@@ -62,7 +65,6 @@ export default function ProductsPage() {
 
   return (
     <div className="min-h-screen bg-[#f8f8f8]">
-
       {/* HEADER */}
       <div className="max-w-8xl mx-auto px-6 py-12 text-center">
         <p className="text-xs tracking-[0.3em] uppercase text-gray-500 mb-3">
@@ -74,7 +76,6 @@ export default function ProductsPage() {
       </div>
 
       <div className="max-w-7xl mx-auto px-6 pb-16 flex gap-10">
-
         {/* SIDEBAR */}
         <aside className="hidden lg:block w-64 shrink-0">
           <div className="sticky top-28 space-y-8">
@@ -90,7 +91,6 @@ export default function ProductsPage() {
 
         {/* MAIN */}
         <main className="flex-1">
-
           {/* SORT */}
           <div className="flex items-center justify-between mb-8">
             <Select onValueChange={handleFilterChange}>
@@ -114,12 +114,9 @@ export default function ProductsPage() {
           />
 
           {/* LOAD MORE */}
-          <div className="text-center mt-14">
-            <Button className="rounded-full px-6 py-3">
-              Load More
-            </Button>
-          </div>
-
+          {/* <div className="text-center mt-14">
+            <Button className="rounded-full px-6 py-3">Load More</Button>
+          </div> */}
         </main>
       </div>
     </div>
