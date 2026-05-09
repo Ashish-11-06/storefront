@@ -5,4 +5,5 @@ export interface Product {
   slug: string;
   image?: string;
   category?: string;
+  unit?: string;
 }

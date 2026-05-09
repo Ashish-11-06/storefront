@@ -14,6 +14,7 @@ export const metadata = {
 
 export default function HomePage() {
   return (
+<<<<<<< HEAD
     <div className="min-h-screen bg-[#FAFAF9] font-sans text-gray-800 selection:bg-[#F59E0B] selection:text-white overflow-x-hidden">
       <Header />
       <main className="max-w-7xl mx-auto pb-20">
@@ -68,5 +69,15 @@ export default function HomePage() {
         </div>
       </footer>
     </div>
+=======
+    <>
+      <HeroSection />
+      <CategoriesSection />
+      <FeaturedProducts />
+      <WhyChooseUs />
+      <SeoContent />
+      <Newsletter />
+    </>
+>>>>>>> main
   );
 }
