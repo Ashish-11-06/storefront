@@ -58,7 +58,7 @@ export default function RootLayout({
               richColors
               closeButton
               duration={2000}
-               offset={{ top: 80}}
+              offset={{ top: 80}}
             />
 
           </ThemeProvider>
