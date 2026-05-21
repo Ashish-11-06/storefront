@@ -5,11 +5,25 @@ import { useQuery, useMutation } from "@apollo/client/react";
 import { GET_CART } from "@/graphql/queries/cartQueries";
 import { CREATE_ORDER } from "@/graphql/queries/orderQueries";
 import { GET_PROFILE } from "@/graphql/queries/profileQueries";
+import { ADD_ADDRESS } from "@/graphql/queries/profileQueries";
 import { GET_PRODUCTS } from "@/graphql/queries/productQueries";
 import { CREATE_RAZORPAY_ORDER, VERIFY_PAYMENT } from "@/graphql/queries/orderQueries"
 import { Button } from "@/components/ui/button";
 import { useSearchParams } from "next/navigation";
-import { User, Phone, Mail, MapPin, Pencil } from "lucide-react";
+import {
+  User,
+  Phone,
+  Mail,
+  MapPin,
+  Pencil,
+  ChevronDown,
+  Check,
+  CreditCard,
+  Wallet,
+  X,
+  Home,
+  Building2,
+} from "lucide-react";
 import { toast } from "sonner";
 
 /* ================= TYPES ================= */
@@ -37,7 +51,8 @@ export default function OrderSummaryPage() {
   const productIdParam = searchParams.get("productId");
   const quantityParam = searchParams.get("quantity");
   const cartParam = searchParams.get("cart");
-
+  const [addAddress, { loading: addingAddress }] =
+    useMutation(ADD_ADDRESS);
   const parsedProductId = productIdParam ? Number(productIdParam) : null;
   const quantity = Math.max(1, Number(quantityParam) || 1);
 
@@ -78,7 +93,10 @@ export default function OrderSummaryPage() {
     skip: isBuyNow || isCartCheckout,
   });
 
-  const { data: profileData } = useQuery(GET_PROFILE);
+  const {
+    data: profileData,
+    refetch: refetchProfile,
+  } = useQuery(GET_PROFILE);
 
   const products = productData?.products?.products || [];
 
@@ -93,6 +111,19 @@ export default function OrderSummaryPage() {
 
   const [selectedAddressId, setSelectedAddressId] = useState<string | null>(null);
 
+  const [showAddressModal, setShowAddressModal] =
+    useState(false);
+
+  const [addressForm, setAddressForm] = useState({
+    name: "",
+    phone: "",
+    city: "",
+    state: "",
+    pincode: "",
+    landmark: "",
+    isDefault: false,
+  });
+
   const [form, setForm] = useState({
     name: "",
     phone: "",
@@ -100,6 +131,14 @@ export default function OrderSummaryPage() {
     address: "",
     payment: "COD",
   });
+  const [showAdvanceOrder, setShowAdvanceOrder] = useState(false);
+  const [advanceDate, setAdvanceDate] = useState("");
+
+  const [showAddressDropdown, setShowAddressDropdown] = useState(false);
+
+  const selectedAddress = addresses.find(
+    (a) => a.id === selectedAddressId
+  );
 
   useEffect(() => {
     if (addresses.length > 0 && !selectedAddressId) {
@@ -119,7 +158,54 @@ export default function OrderSummaryPage() {
       });
     }
   }, [addresses, selectedAddressId, customer]);
+  const handleAddAddress = async () => {
+    if (
+      !addressForm.name ||
+      !addressForm.phone ||
+      !addressForm.city
+    ) {
+      toast.error("Please fill required fields");
+      return;
+    }
 
+    try {
+      const res = await addAddress({
+        variables: {
+          ...addressForm,
+        },
+      });
+
+      await refetchProfile();
+
+      const newAddress =
+        res?.data?.addAddress?.address;
+
+      if (newAddress) {
+        setSelectedAddressId(newAddress.id);
+
+        handleAddressSelect(newAddress.id);
+      }
+
+      setShowAddressModal(false);
+
+      setAddressForm({
+        name: "",
+        phone: "",
+        city: "",
+        state: "",
+        pincode: "",
+        landmark: "",
+        isDefault: false,
+      });
+
+      toast.success("Address added successfully");
+
+    } catch (err: any) {
+      toast.error(
+        err.message || "Failed to add address"
+      );
+    }
+  };
   const handleAddressSelect = (id: string) => {
     setSelectedAddressId(id);
 
@@ -190,14 +276,19 @@ export default function OrderSummaryPage() {
 
   const [createOrder, { loading }] = useMutation(CREATE_ORDER);
 
-  const handlePlaceOrder = async () => {
+  const handlePlaceOrder = async (isAdvance = false) => {
     if (!form.name || !form.phone || !form.address) {
       toast.error("Please fill all required details");
       return;
     }
 
     if (!orderItems.length) {
-      toast.error("No items to order 🛒");
+      toast.error("No items to order!");
+      return;
+    }
+
+    if (isAdvance && !advanceDate) {
+      toast.error("Please select advance delivery date");
       return;
     }
 
@@ -211,6 +302,10 @@ export default function OrderSummaryPage() {
           shippingAddress: form.address,
           paymentMethod: form.payment,
           items: orderItems,
+
+          // NEW
+          advanceOrder: isAdvance,
+          deliveryDate: isAdvance ? advanceDate : null,
         },
       });
 
@@ -331,108 +426,142 @@ export default function OrderSummaryPage() {
 
           <div className="space-y-4">
 
+            {/* HEADER */}
             <div className="flex justify-between items-center">
-              <h3 className="font-semibold text-lg">Select Delivery Address</h3>
+              <h3 className="font-semibold text-lg">
+                Select Delivery Address
+              </h3>
 
-              {/* Optional Add New */}
-              <button className="text-sm text-primary hover:underline">
-                + Add New
+              <button
+                type="button"
+                onClick={() => setShowAddressModal(true)}
+                className="text-sm text-primary hover:underline"
+              >
+                + Add New Address
               </button>
             </div>
 
-            {addresses.map((addr) => {
-              const isSelected = selectedAddressId === addr.id;
+            {/* CUSTOM DROPDOWN */}
+            <div className="relative">
 
-              return (
-                <div
-                  key={addr.id}
-                  onClick={() => handleAddressSelect(addr.id)}
-                  className={`relative border rounded-2xl p-4 cursor-pointer transition-all duration-200
-        ${isSelected
-                      ? "border-primary bg-primary/5 shadow-md"
-                      : "hover:border-primary/50 hover:shadow-sm"
+              {/* SELECTED VALUE */}
+              <button
+                type="button"
+                onClick={() =>
+                  setShowAddressDropdown(!showAddressDropdown)
+                }
+                className="w-full border rounded-2xl p-4 flex items-center justify-between bg-background hover:border-primary transition"
+              >
+
+                <div className="flex items-start gap-3 text-left">
+
+                  <div className="mt-1 text-primary">
+                    <MapPin size={20} />
+                  </div>
+
+                  <div>
+                    {selectedAddress ? (
+                      <>
+                        <p className="font-medium">
+                          {selectedAddress.name}
+                        </p>
+
+                        <p className="text-sm text-muted-foreground">
+                          {selectedAddress.phone}
+                        </p>
+
+                        <p className="text-sm text-muted-foreground">
+                          {selectedAddress.city}, {selectedAddress.state} -{" "}
+                          {selectedAddress.pincode}
+                        </p>
+                      </>
+                    ) : (
+                      <p className="text-muted-foreground">
+                        Select Address
+                      </p>
+                    )}
+                  </div>
+
+                </div>
+
+                <ChevronDown
+                  size={20}
+                  className={`transition-transform duration-200 ${showAddressDropdown ? "rotate-180" : ""
                     }`}
-                >
+                />
 
-                  {/* DEFAULT BADGE */}
-                  {addr.isDefault && (
-                    <span className="absolute top-3 right-3 text-xs bg-green-100 text-green-700 px-2 py-1 rounded-full">
-                      Default
-                    </span>
-                  )}
+              </button>
 
-                  <div className="flex gap-4">
+              {/* DROPDOWN MENU */}
+              {showAddressDropdown && (
+                <div className="absolute z-50 mt-2 w-full bg-background border rounded-2xl shadow-xl overflow-hidden">
 
-                    {/* ICON */}
-                    <div className="mt-1 text-primary">
-                      <MapPin size={20} />
-                    </div>
+                  {addresses.map((addr) => {
+                    const isSelected =
+                      selectedAddressId === addr.id;
 
-                    {/* CONTENT */}
-                    <div className="flex-1">
+                    return (
+                      <button
+                        key={addr.id}
+                        type="button"
+                        onClick={() => {
+                          handleAddressSelect(addr.id);
+                          setShowAddressDropdown(false);
+                        }}
+                        className={`w-full p-4 flex items-start justify-between text-left hover:bg-muted transition
+                ${isSelected ? "bg-primary/5" : ""}
+              `}
+                      >
 
-                      <div className="flex justify-between items-start">
+                        <div className="flex gap-3">
 
-                        <div>
-                          <p className="font-medium text-base">
-                            {addr.name}
-                          </p>
+                          <div className="mt-1 text-primary">
+                            <MapPin size={18} />
+                          </div>
 
-                          <p className="text-sm text-muted-foreground">
-                            {addr.phone}
-                          </p>
+                          <div>
 
-                          <p className="text-sm text-muted-foreground mt-1 leading-relaxed">
-                            {addr.city}, {addr.state} - {addr.pincode}
-                          </p>
+                            <div className="flex items-center gap-2">
+                              <p className="font-medium">
+                                {addr.name}
+                              </p>
+
+                              {addr.isDefault && (
+                                <span className="text-[10px] bg-green-100 text-green-700 px-2 py-0.5 rounded-full">
+                                  Default
+                                </span>
+                              )}
+                            </div>
+
+                            <p className="text-sm text-muted-foreground">
+                              {addr.phone}
+                            </p>
+
+                            <p className="text-sm text-muted-foreground leading-relaxed">
+                              {addr.city}, {addr.state} -{" "}
+                              {addr.pincode}
+                            </p>
+
+                          </div>
+
                         </div>
 
-                        {/* RADIO */}
-                        <div
-                          className={`w-5 h-5 rounded-full border flex items-center justify-center 
-                ${isSelected ? "border-primary" : "border-gray-400"}`}
-                        >
-                          {isSelected && (
-                            <div className="w-2.5 h-2.5 bg-primary rounded-full" />
-                          )}
-                        </div>
-
-                      </div>
-
-                      {/* ACTIONS */}
-                      <div className="flex justify-between items-center mt-4">
-
-                        {/* Deliver Here Button */}
-                        {isSelected ? (
-                          <button className="bg-primary text-white text-sm px-4 py-1.5 rounded-full">
-                            Deliver Here
-                          </button>
-                        ) : (
-                          <span className="text-xs text-muted-foreground">
-                            Click to select
-                          </span>
+                        {/* CHECK ICON */}
+                        {isSelected && (
+                          <Check
+                            size={18}
+                            className="text-primary mt-1"
+                          />
                         )}
 
-                        {/* Edit */}
-                        {/* <button
-                          onClick={(e) => {
-                            e.stopPropagation();
-                            console.log("Edit address", addr.id);
-                          }}
-                          className="flex items-center gap-1 text-sm text-primary hover:underline"
-                        >
-                          <Pencil size={14} />
-                          Edit
-                        </button> */}
+                      </button>
+                    );
+                  })}
 
-                      </div>
-
-                    </div>
-
-                  </div>
                 </div>
-              );
-            })}
+              )}
+
+            </div>
 
           </div>
           <Input icon={<User />} name="name" value={form.name} onChange={(e: any) => setForm({ ...form, name: e.target.value })} placeholder="Name" />
@@ -447,30 +576,105 @@ export default function OrderSummaryPage() {
 
           {/* ✅ PAYMENT OPTIONS */}
           <div>
-            <h3 className="font-medium mb-2">Payment Method</h3>
+            <h3 className="font-medium mb-3 text-lg">
+              Payment Method
+            </h3>
 
-            <div className="flex gap-4">
-              <label className="flex items-center gap-2 border p-3 rounded-lg cursor-pointer">
+            <div className="grid sm:grid-cols-2 gap-4">
+
+              {/* COD */}
+              <label
+                className={`relative border rounded-2xl p-4 cursor-pointer transition-all duration-200 flex items-center gap-4
+      ${form.payment === "COD"
+                    ? "border-primary bg-primary/5 shadow-md"
+                    : "hover:border-primary/40"
+                  }`}
+              >
+
                 <input
                   type="radio"
                   name="payment"
                   value="COD"
                   checked={form.payment === "COD"}
-                  onChange={(e) => setForm({ ...form, payment: e.target.value })}
+                  onChange={(e) =>
+                    setForm({
+                      ...form,
+                      payment: e.target.value,
+                    })
+                  }
+                  className="hidden"
                 />
-                Cash on Delivery
+
+                {/* ICON */}
+                <div
+                  className={`w-12 h-12 rounded-xl flex items-center justify-center
+        ${form.payment === "COD"
+                      ? "bg-primary text-white"
+                      : "bg-muted text-muted-foreground"
+                    }`}
+                >
+                  <Wallet size={22} />
+                </div>
+
+                {/* CONTENT */}
+                <div className="flex-1">
+                  <p className="font-semibold">
+                    Cash on Delivery
+                  </p>
+
+                  <p className="text-sm text-muted-foreground">
+                    Pay when your order arrives
+                  </p>
+                </div>
+
               </label>
 
-              <label className="flex items-center gap-2 border p-3 rounded-lg cursor-pointer">
+              {/* ONLINE */}
+              <label
+                className={`relative border rounded-2xl p-4 cursor-pointer transition-all duration-200 flex items-center gap-4
+      ${form.payment === "ONLINE"
+                    ? "border-primary bg-primary/5 shadow-md"
+                    : "hover:border-primary/40"
+                  }`}
+              >
+
                 <input
                   type="radio"
                   name="payment"
                   value="ONLINE"
                   checked={form.payment === "ONLINE"}
-                  onChange={(e) => setForm({ ...form, payment: e.target.value })}
+                  onChange={(e) =>
+                    setForm({
+                      ...form,
+                      payment: e.target.value,
+                    })
+                  }
+                  className="hidden"
                 />
-                Online Payment
+
+                {/* ICON */}
+                <div
+                  className={`w-12 h-12 rounded-xl flex items-center justify-center
+        ${form.payment === "ONLINE"
+                      ? "bg-primary text-white"
+                      : "bg-muted text-muted-foreground"
+                    }`}
+                >
+                  <CreditCard size={22} />
+                </div>
+
+                {/* CONTENT */}
+                <div className="flex-1">
+                  <p className="font-semibold">
+                    Online Payment
+                  </p>
+
+                  <p className="text-sm text-muted-foreground">
+                    Pay securely with Razorpay
+                  </p>
+                </div>
               </label>
+
             </div>
           </div>
         </div>
@@ -534,15 +738,333 @@ export default function OrderSummaryPage() {
     </p>
   )} */}
 
-          <Button
-            onClick={handlePlaceOrder}
-            disabled={loading}
-            className="w-full mt-6"
-          >
-            {loading ? "Placing Order..." : "Place Order"}
-          </Button>
+          <div className="mt-6 space-y-4">
+
+            {/* ADVANCE DATE PICKER */}
+            {showAdvanceOrder && (
+              <div className="border rounded-xl p-4 bg-muted/30">
+                <label className="block text-sm font-medium mb-2">
+                  Select Delivery Date
+                </label>
+
+                <input
+                  type="date"
+                  value={advanceDate}
+                  min={new Date().toISOString().split("T")[0]}
+                  onChange={(e) => setAdvanceDate(e.target.value)}
+                  className="w-full border rounded-lg p-3"
+                />
+
+                {advanceDate && (
+                  <p className="text-sm text-green-600 mt-2">
+                    Delivery scheduled for{" "}
+                    {new Date(advanceDate)
+                      .toLocaleDateString("en-GB")
+                      .replace(/\//g, "-")}
+                  </p>
+                )}
+
+                {/* ACTION BUTTONS */}
+                <div className="flex gap-3 mt-4">
+
+                  {/* CONFIRM ADVANCE ORDER */}
+                  <Button
+                    type="button"
+                    disabled={!advanceDate || loading}
+                    onClick={() => handlePlaceOrder(true)}
+                    className="flex-1"
+                  >
+                    {loading ? "Placing..." : "Confirm Advance Order"}
+                  </Button>
+
+                  {/* CANCEL */}
+                  <Button
+                    type="button"
+                    variant="outline"
+                    onClick={() => {
+                      setShowAdvanceOrder(false);
+                      setAdvanceDate("");
+                    }}
+                    className="flex-1"
+                  >
+                    Cancel
+                  </Button>
+
+                </div>
+              </div>
+            )}
+
+            {/* MAIN BUTTONS */}
+            <div className="flex gap-3">
+
+              {/* NORMAL ORDER */}
+              <Button
+                onClick={() => handlePlaceOrder(false)}
+                disabled={loading || showAdvanceOrder}
+                className="flex-1"
+              >
+                {loading
+                  ? "Placing..."
+                  : showAdvanceOrder
+                    ? "Advance Order Active"
+                    : "Place Order"}
+              </Button>
+
+              {/* ADVANCE ORDER */}
+              {!showAdvanceOrder && (
+                <Button
+                  type="button"
+                  variant="outline"
+                  onClick={() => setShowAdvanceOrder(true)}
+                  className="flex-1"
+                >
+                  Advance Order
+                </Button>
+              )}
+
+            </div>
+          </div>
         </div>
       </div>
+      {showAddressModal && (
+        <div className="fixed inset-0 z-50 bg-black/50 backdrop-blur-sm flex items-center justify-center p-4">
+
+          <div className="bg-background w-full max-w-lg rounded-3xl shadow-2xl overflow-hidden animate-in fade-in zoom-in duration-200">
+
+            {/* HEADER */}
+            <div className="flex items-center justify-between p-5 border-b">
+
+              <div>
+                <h2 className="text-xl font-semibold">
+                  Add New Address
+                </h2>
+
+                <p className="text-sm text-muted-foreground mt-1">
+                  Save delivery address for future orders
+                </p>
+              </div>
+
+              <button
+                onClick={() => setShowAddressModal(false)}
+                className="w-9 h-9 rounded-full hover:bg-muted flex items-center justify-center"
+              >
+                <X size={18} />
+              </button>
+
+            </div>
+
+            {/* BODY */}
+            <div className="p-5 space-y-4 max-h-[80vh] overflow-y-auto">
+
+              {/* NAME */}
+              <div>
+                <label className="text-sm font-medium mb-2 block">
+                  Full Name
+                </label>
+
+                <div className="relative">
+                  <User
+                    size={18}
+                    className="absolute left-3 top-3.5 text-muted-foreground"
+                  />
+
+                  <input
+                    placeholder="Enter full name"
+                    className="w-full border rounded-xl p-3 pl-10"
+                    value={addressForm.name}
+                    onChange={(e) =>
+                      setAddressForm({
+                        ...addressForm,
+                        name: e.target.value,
+                      })
+                    }
+                  />
+                </div>
+              </div>
+
+              {/* PHONE */}
+              <div>
+                <label className="text-sm font-medium mb-2 block">
+                  Phone Number
+                </label>
+
+                <div className="relative">
+                  <Phone
+                    size={18}
+                    className="absolute left-3 top-3.5 text-muted-foreground"
+                  />
+
+                  <input
+                    placeholder="Enter phone number"
+                    className="w-full border rounded-xl p-3 pl-10"
+                    value={addressForm.phone}
+                    onChange={(e) =>
+                      setAddressForm({
+                        ...addressForm,
+                        phone: e.target.value,
+                      })
+                    }
+                  />
+                </div>
+              </div>
+
+              {/* CITY + STATE */}
+              <div className="grid grid-cols-2 gap-4">
+
+                <div>
+                  <label className="text-sm font-medium mb-2 block">
+                    City
+                  </label>
+
+                  <div className="relative">
+                    <Building2
+                      size={18}
+                      className="absolute left-3 top-3.5 text-muted-foreground"
+                    />
+
+                    <input
+                      placeholder="City"
+                      className="w-full border rounded-xl p-3 pl-10"
+                      value={addressForm.city}
+                      onChange={(e) =>
+                        setAddressForm({
+                          ...addressForm,
+                          city: e.target.value,
+                        })
+                      }
+                    />
+                  </div>
+                </div>
+
+                <div>
+                  <label className="text-sm font-medium mb-2 block">
+                    State
+                  </label>
+
+                  <div className="relative">
+                    <MapPin
+                      size={18}
+                      className="absolute left-3 top-3.5 text-muted-foreground"
+                    />
+
+                    <input
+                      placeholder="State"
+                      className="w-full border rounded-xl p-3 pl-10"
+                      value={addressForm.state}
+                      onChange={(e) =>
+                        setAddressForm({
+                          ...addressForm,
+                          state: e.target.value,
+                        })
+                      }
+                    />
+                  </div>
+                </div>
+
+              </div>
+
+              {/* PINCODE */}
+              <div>
+                <label className="text-sm font-medium mb-2 block">
+                  Pincode
+                </label>
+
+                <input
+                  placeholder="Enter pincode"
+                  className="w-full border rounded-xl p-3"
+                  value={addressForm.pincode}
+                  onChange={(e) =>
+                    setAddressForm({
+                      ...addressForm,
+                      pincode: e.target.value,
+                    })
+                  }
+                />
+              </div>
+
+              {/* LANDMARK */}
+              <div>
+                <label className="text-sm font-medium mb-2 block">
+                  Landmark
+                </label>
+
+                <div className="relative">
+                  <Home
+                    size={18}
+                    className="absolute left-3 top-3.5 text-muted-foreground"
+                  />
+
+                  <input
+                    placeholder="Nearby landmark"
+                    className="w-full border rounded-xl p-3 pl-10"
+                    value={addressForm.landmark}
+                    onChange={(e) =>
+                      setAddressForm({
+                        ...addressForm,
+                        landmark: e.target.value,
+                      })
+                    }
+                  />
+                </div>
+              </div>
+
+              {/* DEFAULT */}
+              <label className="flex items-center gap-3 border rounded-xl p-4 cursor-pointer">
+
+                <input
+                  type="checkbox"
+                  checked={addressForm.isDefault}
+                  onChange={(e) =>
+                    setAddressForm({
+                      ...addressForm,
+                      isDefault: e.target.checked,
+                    })
+                  }
+                />
+
+                <div>
+                  <p className="font-medium">
+                    Set as default address
+                  </p>
+
+                  <p className="text-sm text-muted-foreground">
+                    Automatically selected for future orders
+                  </p>
+                </div>
+
+              </label>
+
+            </div>
+
+            {/* FOOTER */}
+            <div className="border-t p-5 flex gap-3">
+
+              <Button
+                variant="outline"
+                onClick={() =>
+                  setShowAddressModal(false)
+                }
+                className="flex-1"
+              >
+                Cancel
+              </Button>
+
+              <Button
+                onClick={handleAddAddress}
+                disabled={addingAddress}
+                className="flex-1"
+              >
+                {addingAddress
+                  ? "Saving..."
+                  : "Save Address"}
+              </Button>
+
+            </div>
+
+          </div>
+
+        </div>
+      )}
     </div>
   );
 }

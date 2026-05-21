@@ -22,7 +22,7 @@ const inter = Inter({
 });
 
 export const metadata: Metadata = {
-  title: "Bloom & Blossom - Exotic Flowers & Pooja Flowers",
+  title: "Rajesh Florals - Exotic Flowers & Pooja Flowers",
   description:
     "Premium flowers for all occasions - Exotic flowers, Pooja flowers, Festive torans, Wedding specials & Customized orders",
 };

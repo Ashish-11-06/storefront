@@ -64,7 +64,7 @@ export default function ProfilePage() {
 
   if (loading) {
     return (
-      <div className="bg-[#f8f8f8] min-h-screen py-14">
+      <div className="min-h-screen bg-gradient-to-b from-background to-muted/30 py-10">
         <div className="max-w-5xl mx-auto px-6 space-y-10">
 
           {/* HEADER */}
@@ -216,71 +216,120 @@ export default function ProfilePage() {
         <h1 className="text-2xl font-semibold">My Profile</h1>
 
         {/* PROFILE */}
-        <div className="bg-white p-6 rounded-xl flex items-center justify-between">
-          <div className="flex items-center gap-4">
-            <div className="w-14 h-14 rounded-full bg-gradient-to-br from-rose-400 to-pink-500 flex items-center justify-center text-white font-semibold text-lg">
-              {user?.firstName?.[0]}{user?.lastName?.[0]}
+        <div className="bg-background border rounded-3xl p-6 sm:p-8 shadow-sm flex flex-col sm:flex-row sm:items-center justify-between gap-6">
+
+          <div className="flex items-center gap-5">
+
+            {/* AVATAR */}
+            <div className="w-20 h-20 rounded-3xl bg-gradient-to-br from-primary to-primary/70 flex items-center justify-center text-white text-2xl font-bold shadow-lg">
+              {user?.firstName?.[0]}
+              {user?.lastName?.[0]}
             </div>
 
+            {/* USER INFO */}
             <div>
-              <h2 className="text-2xl font-semibold mb-2">
+
+              <h2 className="text-2xl font-bold mb-2">
                 {user?.firstName} {user?.lastName}
               </h2>
 
-              <p className="flex items-center gap-1 mb-1">
-                <Mail className="w-4 h-4" />
-                {user?.email}
-              </p>
+              <div className="space-y-2 text-sm text-muted-foreground">
 
-              <p className="flex items-center gap-1">
-                <Phone className="w-4 h-4" />
-                {user?.phone}
-              </p>
+                <p className="flex items-center gap-2">
+                  <Mail className="w-4 h-4" />
+                  {user?.email}
+                </p>
+
+                <p className="flex items-center gap-2">
+                  <Phone className="w-4 h-4" />
+                  {user?.phone}
+                </p>
+
+              </div>
+
             </div>
+
           </div>
 
-          <button
+          {/* ACTION */}
+          <Button
+            variant="outline"
+            className="rounded-2xl h-11 px-5"
             onClick={() => {
               setShowEdit(true);
+
               setEditForm({
                 firstName: user?.firstName || "",
                 lastName: user?.lastName || "",
                 phone: user?.phone || "",
               });
             }}
-            className="flex items-center gap-2 px-4 py-2 text-sm rounded-full border cursor-pointer"
           >
-            <Pencil className="w-4 h-4" />
+            <Pencil className="w-4 h-4 mr-2" />
             Edit Profile
-          </button>
+          </Button>
+
         </div>
 
         {/* QUICK LINKS */}
-        <div className="grid grid-cols-2 sm:grid-cols-4 gap-4">
+        <div className="grid grid-cols-2 md:grid-cols-3 gap-5">
+
           {[
-            { label: "Orders", icon: ShoppingBag, link: "/orders" },
-            { label: "Wishlist", icon: Heart, link: "/wishlist" },
-            { label: "Cart", icon: ShoppingCart, link: "/cart" },
-            // { label: "Payments", icon: CreditCard, link: "/payments" },
+            {
+              label: "Orders",
+              icon: ShoppingBag,
+              link: "/orders",
+              desc: "Track your purchases",
+            },
+            {
+              label: "Wishlist",
+              icon: Heart,
+              link: "/wishlist",
+              desc: "Saved products",
+            },
+            {
+              label: "Cart",
+              icon: ShoppingCart,
+              link: "/cart",
+              desc: "Items ready to checkout",
+            },
           ].map((item, i) => (
             <Link
               key={i}
               href={item.link}
-              className="bg-white p-4 rounded-xl text-center"
+              className="group bg-background border rounded-3xl p-5 hover:shadow-lg hover:-translate-y-1 transition-all duration-300"
             >
-              <item.icon className="mx-auto mb-2 text-rose-500" />
-              {item.label}
+
+              <div className="w-12 h-12 rounded-2xl bg-primary/10 flex items-center justify-center mb-4 group-hover:bg-primary group-hover:text-white transition-all">
+
+                <item.icon className="w-6 h-6 text-primary group-hover:text-white" />
+
+              </div>
+
+              <h3 className="font-semibold text-lg mb-1">
+                {item.label}
+              </h3>
+
+              <p className="text-sm text-muted-foreground">
+                {item.desc}
+              </p>
+
             </Link>
           ))}
+
         </div>
 
         {/* ADDRESS SECTION */}
         <div>
-          <div className="flex justify-between mb-4">
+          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-6">
             <h2 className="text-lg font-semibold">Saved Addresses</h2>
 
-            <Button onClick={() => setShowAddressModal(true)}>
-              + Add Address
+            <Button
+              onClick={() => setShowAddressModal(true)}
+              className="rounded-2xl h-11 px-5"
+            >
+              <MapPin className="w-4 h-4 mr-2" />
+              Add Address
             </Button>
           </div>
 
@@ -290,40 +339,59 @@ export default function ProfilePage() {
             addresses.map((addr: any) => (
               <div
                 key={addr.id}
-                className="bg-white p-4 rounded mb-3 flex justify-between items-start border"
+                className="group bg-background border rounded-3xl p-5 flex justify-between gap-4 hover:shadow-md transition-all duration-300"
               >
-                <div className="space-y-1">
-                  <p className="font-medium">
-                    {addr.name || user?.firstName}
-                  </p>
 
-                  <p className="text-sm text-muted-foreground">
-                    {addr.phone || user?.phone}
-                  </p>
+                <div className="flex gap-4">
 
-                  <p className="text-sm text-gray-600">
-                    {addr.city}, {addr.state} - {addr.pincode}
-                  </p>
+                  {/* ICON */}
+                  <div className="w-12 h-12 rounded-2xl bg-primary/10 flex items-center justify-center text-primary shrink-0">
+                    <MapPin className="w-5 h-5" />
+                  </div>
 
-                  {addr.landmark && (
-                    <p className="text-xs text-gray-500">
-                      {addr.landmark}
+                  {/* CONTENT */}
+                  <div className="space-y-2">
+
+                    <div className="flex items-center gap-2 flex-wrap">
+
+                      <p className="font-semibold text-base">
+                        {addr.name || user?.firstName}
+                      </p>
+
+                      {addr.isDefault && (
+                        <span className="text-xs bg-green-100 text-green-700 px-2 py-1 rounded-full">
+                          Default
+                        </span>
+                      )}
+
+                    </div>
+
+                    <p className="text-sm text-muted-foreground">
+                      {addr.phone || user?.phone}
                     </p>
-                  )}
 
-                  {addr.isDefault && (
-                    <span className="text-xs bg-green-100 text-green-600 px-2 py-1 rounded">
-                      Default
-                    </span>
-                  )}
+                    <p className="text-sm leading-relaxed text-muted-foreground">
+                      {addr.city}, {addr.state} - {addr.pincode}
+                    </p>
+
+                    {addr.landmark && (
+                      <p className="text-xs text-muted-foreground">
+                        Landmark: {addr.landmark}
+                      </p>
+                    )}
+
+                  </div>
+
                 </div>
 
-                <div className="flex gap-2">
-                  <button onClick={() => handleEditClick(addr)} className="cursor-pointer">
-                    <Pencil className="w-4 h-4 text-gray-500 " />
-                  </button>
-                  {/* <MapPin className="text-gray-400 w-5 h-5" /> */}
-                </div>
+                {/* ACTIONS */}
+                <button
+                  onClick={() => handleEditClick(addr)}
+                  className="w-10 h-10 rounded-xl border flex items-center justify-center hover:bg-primary hover:text-white transition shrink-0"
+                >
+                  <Pencil className="w-4 h-4" />
+                </button>
+
               </div>
             ))
           )}
